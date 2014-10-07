@@ -12,7 +12,7 @@ from matplotlib.patches import Rectangle
 
 def sigmoid(x,b):
     # b is bias
-    return 1 / (1 + math.exp(-10*(x-b)))
+    return 1 / (1 + math.exp(-2*(x-b)))
 
 
 class ReuseNetwork:
@@ -23,6 +23,7 @@ class ReuseNetwork:
         self.inputs = []
         self.hidden = []
         self.reuse = {} # maps recruit label to actual recruit net
+        self.recruits = []
         self.outputs = []
         self.outConnections = {} # maps a node to its outgoing edges
         self.inConnections = {} # maps a node to its incoming edges
@@ -57,6 +58,7 @@ class ReuseNetwork:
     def addHidden(self, bias=0.5):
         node = self.numNodes
         self.hidden.append(node)
+        self.recruits.append(node)
         self.inCharges[node] = 0
         self.outCharges[node] = 0
         self.inConnections[node] = []
@@ -67,6 +69,7 @@ class ReuseNetwork:
 
     def addReuse(self,reuseNet):
         node = self.numNodes
+        self.recruits.append(node)
         self.reuse[node] = copy.deepcopy(reuseNet)
         self.reuseGenomes[node] = []
         self.inConnections[node] = []
@@ -99,7 +102,7 @@ class ReuseNetwork:
             reuseInputs = set()
             reuseOutConnections = []
             # apply genome
-            for s,t,weight in self.reuseGenomes[v]:
+            for s,t,weight,kind in self.reuseGenomes[v]:
                 if s in self.inputs:
                     # set up incharges to recruit
                     r.inCharges[t[0]] += self.outCharges[s]*weight
@@ -155,6 +158,8 @@ class ReuseNetwork:
             self.outCharges[n] = 0
         for e in self.edgeCharges:
             self.edgeCharges[e] = 0
+        for r in self.reuse.values():
+            r.clearCharges()
 
     def __str__(self):
         # Change this depending on what info is useful
@@ -218,7 +223,7 @@ class ReuseNetwork:
                                         nodesize,x3,x4,y3,y4)
             k = k+1
             # draw connections from and to recruit based on genome
-            for s,t,weight in self.reuseGenomes[n]:
+            for s,t,weight,kind in self.reuseGenomes[n]:
                 if s in self.inputs:
                     G.add_edge((s,temp0),(t[0],temp1))    
                 elif t in self.outputs:
