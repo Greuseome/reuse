@@ -26,6 +26,15 @@ DATA = [[[0,0],0],
         [[1,0],1],
         [[1,1],0]]
 
+GENOME = [[0,(0,3),1,'in'],[1,(1,3),1,'in'],[(2,3),2,1,'out']]
+
+fitness = 0
+for d in DATA:
+    xor.setInputs(d[0])
+    xor.activate(xor.inputs)
+    o = xor.readOutputs()
+    fitness += 1 - abs(d[1] - o[0])
+print fitness
 
 best_fitness = -1
 best_net = None
@@ -37,9 +46,9 @@ while best_fitness < 3.6:
 
     for i in range(ne.populationSize):
         currnet = ne.testNet(i)
-        currnet.clearCharges()
         fitness = 0
         for d in DATA:
+            currnet.clearCharges()
             currnet.setInputs(d[0])
             currnet.activate(currnet.inputs)
             o = currnet.readOutputs()
@@ -48,6 +57,10 @@ while best_fitness < 3.6:
 
         if fitness > curr_best_fitness:
             curr_best_fitness = fitness
+            #numIns = 0
+            #for g in currnet.reuseGenomes[3]:
+            #    if g[3] == 'in':
+            #        numIns += 1
             #currnet.visualize()
 
         if fitness > best_fitness:

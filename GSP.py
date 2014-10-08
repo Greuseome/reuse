@@ -13,13 +13,14 @@ class NeuroEvolution:
     numInitialConnections = 3
     numInitialRecruits = 1
     populationSize = 100
-    weightMutationRate = 0.1
-    weightMutationStdev = 2
+    weightMutationRate = 0.0
+    weightMutationStdev = 0.5
     terminalMutationRate = 0.05
+    connectionMutationRate = 0.1
     replacementRate = 0.5
-    initialWeightStdev = 1.0
+    initialWeightStdev = 0
     subPopStagThreshold = 1000 # num gens w/o improvement -> incr connection
-    netStagThreshold = 10 # num gens w/o improvement -> recruit new
+    netStagThreshold = 1000 # num gens w/o improvement -> recruit new
     
     def __init__(self,numInput,numOutput,reusables=[]):
         self.numInput = numInput
@@ -88,6 +89,9 @@ class NeuroEvolution:
                 if random.random() < self.weightMutationRate:
                     gene[2] += random.gauss(0,self.weightMutationStdev)
                 if subPop.kind == 'reuse':
+                    subPop.genomes[i].remove(gene)
+                    subPop.addConnection(subPop.genomes[i])
+                    '''
                     if random.random() < self.terminalMutationRate:
                         if isinstance(gene[0],int): kind = 'in'
                         else: kind = 'out'
@@ -105,6 +109,7 @@ class NeuroEvolution:
                                     subPop.recruit.inputs+subPop.recruit.hidden),sp)
                             else:
                                 gene[1] = random.choice(self.currnet.outputs)
+                     '''
 
 
     def crossover(self,g1,g2):

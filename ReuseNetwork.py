@@ -12,7 +12,7 @@ from matplotlib.patches import Rectangle
 
 def sigmoid(x,b):
     # b is bias
-    return 1 / (1 + math.exp(-2*(x-b)))
+    return 1 / (1 + math.exp(-10*(x-b)))
 
 
 class ReuseNetwork:
@@ -158,8 +158,8 @@ class ReuseNetwork:
             self.outCharges[n] = 0
         for e in self.edgeCharges:
             self.edgeCharges[e] = 0
-        for r in self.reuse.values():
-            r.clearCharges()
+        for r in self.reuse:
+            self.reuse[r].clearCharges()
 
     def __str__(self):
         # Change this depending on what info is useful
@@ -179,15 +179,20 @@ class ReuseNetwork:
         plt.clf()
         G = nx.DiGraph()
         pos = {}
+        labels = {}
+        edge_labels = {}
         colors = []
         nodes = []
         nodesize = []
-        self.drawReuse(-1,G,pos,colors,nodes,nodesize,0.0,1.0,0.0,1.0)
+        self.drawReuse(-1,G,pos,labels,edge_labels,colors,
+                            nodes,nodesize,0.0,1.0,0.0,1.0)
         nx.draw(G,pos,node_color=colors,nodelist=nodes,
                 with_labels=False,node_size=nodesize)
+        nx.draw_networkx_labels(G,pos,labels)
+        nx.draw_networkx_edge_labels(G,pos,edge_labels)
         plt.draw()
 
-    def drawReuse(self,v,G,pos,colors,nodes,nodesize,x1,x2,y1,y2):
+    def drawReuse(self,v,G,pos,labels,edge_labels,colors,nodes,nodesize,x1,x2,y1,y2):
         a = v # v is an id for current net being drawn
         temp0 = a
         
@@ -200,7 +205,8 @@ class ReuseNetwork:
             nodesize.append(300*(y2-y1))
             x = x1 + (n+1)*(x2-x1)/(len(self.inputs)+1)
             y = y1 + (y2-y1)/4.0
-            pos[node] = (x,y)           
+            pos[node] = (x,y)  
+            labels[node] = "{0:.2f}".format(self.outCharges[node[0]])
             if self.outCharges[self.inputs[n]] > 0.5:
                 colors.append('r')
             else: colors.append('b')
@@ -219,15 +225,17 @@ class ReuseNetwork:
             plt.gca().add_patch(Rectangle((x3,y3),x4-x3,y4-y3,
                                    facecolor='white',zorder=0))
             # recursively draw recruits
-            a = self.reuse[n].drawReuse(a,G,pos,colors,nodes,
-                                        nodesize,x3,x4,y3,y4)
+            a = self.reuse[n].drawReuse(a,G,pos,labels,edge_labels,
+                                        colors,nodes,nodesize,x3,x4,y3,y4)
             k = k+1
             # draw connections from and to recruit based on genome
             for s,t,weight,kind in self.reuseGenomes[n]:
                 if s in self.inputs:
-                    G.add_edge((s,temp0),(t[0],temp1))    
+                    G.add_edge((s,temp0),(t[0],temp1))
+                    edge_labels[(s,temp0),(t[0],temp1)] = "{0:.2f}".format(weight)
                 elif t in self.outputs:
-                    G.add_edge((s[0],temp1),(t,temp0))    
+                    G.add_edge((s[0],temp1),(t,temp0))   
+                    edge_labels[(s[0],temp1),(t,temp0)] = "{0:.2f}".format(weight)
                 else:
                     raise Exception ("BAD GENOME MAP")
 
@@ -238,7 +246,8 @@ class ReuseNetwork:
             nodesize.append(300*(y2-y1))
             x = x1 + (n+1+len(self.reuse))*(x2-x1)/(len(self.hidden)+len(self.reuse)+1) 
             y = y1 + 2*(y2-y1)/4.0
-            pos[node] = (x,y)           
+            pos[node] = (x,y)      
+            labels[node] = "{0:.2f}".format(self.nodeBias[node[0]])
             if self.outCharges[self.hidden[n]] > 0.5:
                 colors.append('r')
             else: colors.append('b')
@@ -250,7 +259,8 @@ class ReuseNetwork:
             nodesize.append(300*(y2-y1))
             x = x1 + (n+1)*(x2-x1)/(len(self.outputs)+1)
             y = y1 + 3*(y2-y1)/4.0
-            pos[node] = (x,y)           
+            pos[node] = (x,y)          
+            labels[node] = "{0:.2f}".format(self.nodeBias[node[0]])
             if self.outCharges[self.outputs[n]] > 0.5:
                 colors.append('r')
             else: colors.append('b')
@@ -260,6 +270,7 @@ class ReuseNetwork:
                 if j in self.hidden+self.outputs and i in self.inputs+self.hidden:
                     G.add_edge((i,v),(j,v),weight=self.edgeWeights[i,j],
                                 charge = self.edgeCharges[i,j])
+                    edge_labels[(i,v),(j,v)] = "{0:.2f}".format(self.edgeCharges[i,j])
         
         return a
 

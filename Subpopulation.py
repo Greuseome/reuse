@@ -51,9 +51,11 @@ class SubPopulation:
         kind = random.choice(['in','out'])
         if kind == 'in':
             s = random.choice(self.currnet.inputs)
-            t = (random.choice(self.recruit.inputs+self.recruit.hidden),self.r)
+            t = (random.choice(self.recruit.inputs),self.r)
+            #t = (random.choice(self.recruit.inputs+self.recruit.hidden),self.r)
         elif kind == 'out':
-            s = (self.r,random.choice(self.recruit.hidden+self.recruit.outputs))
+            s = (random.choice(self.recruit.outputs),self.r)
+            #s = (random.choice(self.recruit.hidden+self.recruit.outputs),self.r)
             t = random.choice(self.currnet.outputs)
         weight = random.gauss(0,1)
         genome.append([s,t,weight,kind])
