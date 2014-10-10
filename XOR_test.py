@@ -28,14 +28,6 @@ DATA = [[[0,0],0],
 
 GENOME = [[0,(0,3),1,'in'],[1,(1,3),1,'in'],[(2,3),2,1,'out']]
 
-fitness = 0
-for d in DATA:
-    xor.setInputs(d[0])
-    xor.activate(xor.inputs)
-    o = xor.readOutputs()
-    fitness += 1 - abs(d[1] - o[0])
-print fitness
-
 best_fitness = -1
 best_net = None
 generation = 0
@@ -73,6 +65,7 @@ while best_fitness < 3.6:
         print "Gen " + str(generation) + ", Best: " + str(curr_best_fitness) 
     ne.nextGen()
     generation += 1
+print "Generation "+str(generation)+", task complete."
 
 for d in DATA:
     best_net.clearCharges()
@@ -80,6 +73,5 @@ for d in DATA:
     best_net.activate(best_net.inputs)
     best_net.visualize()
     x = raw_input("")
-print "Complete."
 
 

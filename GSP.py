@@ -10,17 +10,17 @@ class NeuroEvolution:
 
     # GA parameters
     numGenerations = 1000
-    numInitialConnections = 3
+    numInitialConnections = 11
     numInitialRecruits = 1
     populationSize = 100
-    weightMutationRate = 0.0
+    weightMutationRate = 0.05
     weightMutationStdev = 0.5
     terminalMutationRate = 0.05
     connectionMutationRate = 0.1
     replacementRate = 0.5
     initialWeightStdev = 0
-    subPopStagThreshold = 1000 # num gens w/o improvement -> incr connection
-    netStagThreshold = 1000 # num gens w/o improvement -> recruit new
+    subPopStagThreshold = 10 # num gens w/o improvement -> incr connection
+    netStagThreshold = 100 # num gens w/o improvement -> recruit new
     
     def __init__(self,numInput,numOutput,reusables=[]):
         self.numInput = numInput
@@ -88,7 +88,8 @@ class NeuroEvolution:
             for gene in subPop.genomes[i]:
                 if random.random() < self.weightMutationRate:
                     gene[2] += random.gauss(0,self.weightMutationStdev)
-                if subPop.kind == 'reuse':
+                if subPop.kind == 'reuse' and not subPop.fullyConnected:
+                    # mutate terminals
                     subPop.genomes[i].remove(gene)
                     subPop.addConnection(subPop.genomes[i])
                     '''
@@ -128,7 +129,7 @@ class NeuroEvolution:
                 # breed new offspring
                 g1 = sp.genomes[random.choice(topQuartile)]
                 g2 = sp.genomes[random.choice(rank)]
-                if sp.kind == 'reuse':
+                if sp.kind == 'reuse' and not sp.fullyConnected:
                     random.shuffle(g1)
                     random.shuffle(g2)
                 offspring.append(self.crossover(g1,g2))
@@ -145,7 +146,7 @@ class NeuroEvolution:
             self.replace(sp)
             self.mutate(sp)
             # Decide whether to add new connection
-            if self.subPops[sp].kind == 'reuse':
+            if self.subPops[sp].kind == 'reuse' and not self.subPops[sp].fullyConnected:
                 if self.subPopCurrFitness[sp] <= self.subPopBestFitness[sp]:
                     self.subPopStag[sp] += 1
                     if self.subPopStag[sp] == self.subPopStagThreshold:

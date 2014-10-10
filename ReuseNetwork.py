@@ -12,7 +12,10 @@ from matplotlib.patches import Rectangle
 
 def sigmoid(x,b):
     # b is bias
-    return 1 / (1 + math.exp(-10*(x-b)))
+    # using tanh instead of logistic to remedy overflow
+    return (math.tanh(10*(x-b))+1)/2.0
+
+    # unused logistic sigmoid: return 1 / (1 + math.exp(-10*(x-b)))
 
 
 class ReuseNetwork:
@@ -193,6 +196,7 @@ class ReuseNetwork:
         plt.draw()
 
     def drawReuse(self,v,G,pos,labels,edge_labels,colors,nodes,nodesize,x1,x2,y1,y2):
+        CUTOFF = 0
         a = v # v is an id for current net being drawn
         temp0 = a
         
@@ -230,14 +234,15 @@ class ReuseNetwork:
             k = k+1
             # draw connections from and to recruit based on genome
             for s,t,weight,kind in self.reuseGenomes[n]:
-                if s in self.inputs:
-                    G.add_edge((s,temp0),(t[0],temp1))
-                    edge_labels[(s,temp0),(t[0],temp1)] = "{0:.2f}".format(weight)
-                elif t in self.outputs:
-                    G.add_edge((s[0],temp1),(t,temp0))   
-                    edge_labels[(s[0],temp1),(t,temp0)] = "{0:.2f}".format(weight)
-                else:
-                    raise Exception ("BAD GENOME MAP")
+                if abs(weight) > CUTOFF:
+                    if s in self.inputs:
+                        G.add_edge((s,temp0),(t[0],temp1))
+                        edge_labels[(s,temp0),(t[0],temp1)] = "{0:.2f}".format(weight)
+                    elif t in self.outputs:
+                        G.add_edge((s[0],temp1),(t,temp0))   
+                        edge_labels[(s[0],temp1),(t,temp0)] = "{0:.2f}".format(weight)
+                    else:
+                        raise Exception ("BAD GENOME MAP")
 
         for n in range(len(self.hidden)):
             node = (self.hidden[n],v)
@@ -268,9 +273,11 @@ class ReuseNetwork:
         for i in self.outConnections:
             for j in self.outConnections[i]:
                 if j in self.hidden+self.outputs and i in self.inputs+self.hidden:
-                    G.add_edge((i,v),(j,v),weight=self.edgeWeights[i,j],
-                                charge = self.edgeCharges[i,j])
-                    edge_labels[(i,v),(j,v)] = "{0:.2f}".format(self.edgeCharges[i,j])
+                    if abs(self.edgeWeights[i,j]) > CUTOFF:
+                        G.add_edge((i,v),(j,v),weight=self.edgeWeights[i,j],
+                                    charge = self.edgeCharges[i,j])
+                        edge_labels[(i,v),(j,v)] = "{0:.2f}".format(
+                                                self.edgeCharges[i,j])
         
         return a
 

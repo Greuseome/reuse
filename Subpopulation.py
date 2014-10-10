@@ -6,6 +6,9 @@ import random
 
 class SubPopulation:
 
+    # switch for incremental v. fully connected
+    fullyConnected = True
+
     def __init__(self, currnet, r, numConnections,populationSize):
         self.n = 0
         self.numConnections = numConnections
@@ -26,8 +29,17 @@ class SubPopulation:
     def addRandomGenome(self):
         genome = []
         if self.kind == 'reuse':
-            for c in range(self.numConnections):
-                self.addConnection(genome)
+            if self.fullyConnected:
+                # connect all inputs to inputs and outputs to outputs
+                for i0 in self.currnet.inputs:
+                    for i1 in self.recruit.inputs:
+                        genome.append([i0,(i1,self.r),random.gauss(0,1),'in'])
+                for o1 in self.recruit.outputs:
+                    for o0 in self.currnet.outputs:
+                        genome.append([(o1,self.r),o0,random.gauss(0,1),'out'])
+            else:
+                for c in range(self.numConnections):
+                    self.addConnection(genome)
         elif self.kind == 'hidden':
             genome.append([-1,-1,random.gauss(0,1)])
             for i in self.currnet.inputs:
