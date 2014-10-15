@@ -1,6 +1,8 @@
 # Manage and execute evolution in GReuseOME-ESP
 # Fitness should be set by the simulator
 
+# Extended for atari experiments
+
 import ReuseNetwork as NN
 import numpy as np
 import Subpopulation as SP
@@ -9,23 +11,23 @@ import random
 class NeuroEvolution:
 
     # GA parameters
+    numInitialRecruits = 3
     numGenerations = 1000
     numInitialConnections = 11
-    numInitialRecruits = 1
     populationSize = 100
-    weightMutationRate = 0.05
+    weightMutationRate = 0.8
     weightMutationStdev = 0.5
     terminalMutationRate = 0.05
     connectionMutationRate = 0.1
     replacementRate = 0.5
     initialWeightStdev = 0
-    subPopStagThreshold = 10 # num gens w/o improvement -> incr connection
-    netStagThreshold = 100 # num gens w/o improvement -> recruit new
+    subPopStagThreshold = 20 # num gens w/o improvement -> incr connection
+    netStagThreshold = 20 # num gens w/o improvement -> recruit new
     
-    def __init__(self,numInput,numOutput,reusables=[]):
+    def __init__(self,numInput,numOutput,reusables=[],atari=False):
         self.numInput = numInput
         self.numOutput = numOutput
-        self.currnet = NN.ReuseNetwork(numInput,numOutput)
+        self.currnet = NN.ReuseNetwork(numInput,numOutput,atari)
         self.reusables = reusables # list of nets to potentially recruit
         self.bestNetSoFar = None
         self.bestFitnessSoFar = -1

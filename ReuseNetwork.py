@@ -3,6 +3,11 @@
 # For now, net currently being trained is called 'currnet',
 # a net being reused is called a 'recruit'
 
+# Extended to enable initialization of atari nets
+SUBSTRATE_WIDTH = 8
+SUBSTRATE_HEIGHT = 10
+
+
 import math
 import copy
 import networkx as nx
@@ -20,8 +25,7 @@ def sigmoid(x,b):
 
 class ReuseNetwork:
 
-    def __init__(self, numInput, numOutput,name=None):
-        self.name = name
+    def __init__(self, numInput, numOutput,atari=False):
         self.numNodes = 0
         self.inputs = []
         self.hidden = []
@@ -36,38 +40,42 @@ class ReuseNetwork:
         self.outCharges = {} # outgoing charge from a node
         self.edgeCharges = {} # weighted charge along an edge
         self.nodeBias = {}
+        self.atari = atari
 
-        for i in range(numInput):
-            node = self.numNodes
-            self.inputs.append(node)
-            self.inCharges[node] = 0
-            self.outCharges[node] = 0
-            self.outConnections[node] = []
-            self.inConnections[node] = []
-            self.numNodes += 1
+        if atari:
+            self.numSubstrates = numInput
+            for s in range(self.numSubstrates):
+                for x in range(SUBSTRATE_WIDTH):
+                    for y in range(SUBSTRATE_HEIGHT):
+                        node = (s,x,y)
+                        self.inputs.append(node)
+                        self.addNode(node)
+        else:
+            for i in range(numInput):
+                node = self.numNodes
+                self.inputs.append(node)
+                self.addNode(node)
         for o in range(numOutput):
             node = self.numNodes
             self.outputs.append(node)
-            self.nodeBias[node] = 0.5
-            self.inCharges[node] = 0
-            self.outCharges[node] = 0
-            self.inConnections[node] = []
-            self.outConnections[node] = []
-            self.numNodes += 1
+            self.addNode(node)
 
     def numNodes(self):
         return self.numNodes        
+    
+    def addNode(self,node,bias=0.5):
+        self.inCharges[node] = 0
+        self.outCharges[node] = 0
+        self.outConnections[node] = []
+        self.inConnections[node] = []
+        self.nodeBias[node] = bias
+        self.numNodes += 1
 
     def addHidden(self, bias=0.5):
         node = self.numNodes
         self.hidden.append(node)
         self.recruits.append(node)
-        self.inCharges[node] = 0
-        self.outCharges[node] = 0
-        self.inConnections[node] = []
-        self.outConnections[node] = []
-        self.nodeBias[node] = bias
-        self.numNodes += 1
+        self.addNode(node)
         return node
 
     def addReuse(self,reuseNet):
@@ -104,8 +112,21 @@ class ReuseNetwork:
             r.clearCharges()
             reuseInputs = set()
             reuseOutConnections = []
-            # apply genome
-            for s,t,weight,kind in self.reuseGenomes[v]:
+            # apply genome 
+            if self.atari:
+                # expand genome if using tied weights
+                genome = []
+                for gene in self.reuseGenomes[v]:
+                    if isinstance(gene[0],int) and gene[0] < self.numSubstrates:
+                        s0,(s1,r0),weight,kind = gene
+                        for x in range(SUBSTRATE_WIDTH):
+                            for y in range(SUBSTRATE_HEIGHT):
+                                genome.append([(s0,x,y),((s1,x,y),r0),weight,kind])
+                    else: genome.append(gene)
+            else:
+                genome = self.reuseGenomes[v]
+
+            for s,t,weight,kind in genome:
                 if s in self.inputs:
                     # set up incharges to recruit
                     r.inCharges[t[0]] += self.outCharges[s]*weight
@@ -135,7 +156,7 @@ class ReuseNetwork:
         if len(inputs) != len(self.inputs):
             raise Exception("Wrong input size.")
         for i in range(len(self.inputs)):
-            self.inCharges[i] = inputs[i]
+            self.inCharges[self.inputs[i]] = inputs[i]
 
     def activate(self,inputs):
         active = list(inputs)
@@ -163,6 +184,10 @@ class ReuseNetwork:
             self.edgeCharges[e] = 0
         for r in self.reuse:
             self.reuse[r].clearCharges()
+
+    def clearExceptRec(self):
+        # clear everything except recurrent charges
+        return
 
     def __str__(self):
         # Change this depending on what info is useful
@@ -233,16 +258,30 @@ class ReuseNetwork:
                                         colors,nodes,nodesize,x3,x4,y3,y4)
             k = k+1
             # draw connections from and to recruit based on genome
-            for s,t,weight,kind in self.reuseGenomes[n]:
-                if abs(weight) > CUTOFF:
-                    if s in self.inputs:
-                        G.add_edge((s,temp0),(t[0],temp1))
-                        edge_labels[(s,temp0),(t[0],temp1)] = "{0:.2f}".format(weight)
-                    elif t in self.outputs:
+            if self.atari:
+                for gene in self.reuseGenomes[n]:
+                    if isinstance(gene[0],int) and gene[0] < self.numSubstrates:
+                        s0,(s1,r0),weight,kind = gene
+                        for x in range(SUBSTRATE_WIDTH):
+                            for y in range(SUBSTRATE_HEIGHT):
+                                G.add_edge(((s0,x,y),temp0),((s1,x,y),temp1))
+                                edge_labels[((s0,x,y),temp0),((s1,x,y),temp1)] = "{0:.2f}".format(weight)
+                    else: 
+                        s,t,weight,kind = gene
                         G.add_edge((s[0],temp1),(t,temp0))   
                         edge_labels[(s[0],temp1),(t,temp0)] = "{0:.2f}".format(weight)
-                    else:
-                        raise Exception ("BAD GENOME MAP")
+ 
+            else:
+                for s,t,weight,kind in self.reuseGenomes[n]:
+                    if abs(weight) > CUTOFF:
+                        if s in self.inputs or (self.atari and s<self.numSubstrates):
+                            G.add_edge((s,temp0),(t[0],temp1))
+                            edge_labels[(s,temp0),(t[0],temp1)] = "{0:.2f}".format(weight)
+                        elif t in self.outputs:
+                            G.add_edge((s[0],temp1),(t,temp0))   
+                            edge_labels[(s[0],temp1),(t,temp0)] = "{0:.2f}".format(weight)
+                        else:
+                            raise Exception ("BAD GENOME MAP")
 
         for n in range(len(self.hidden)):
             node = (self.hidden[n],v)
@@ -277,7 +316,7 @@ class ReuseNetwork:
                         G.add_edge((i,v),(j,v),weight=self.edgeWeights[i,j],
                                     charge = self.edgeCharges[i,j])
                         edge_labels[(i,v),(j,v)] = "{0:.2f}".format(
-                                                self.edgeCharges[i,j])
+                                                self.edgeWeights[i,j])
         
         return a
 
