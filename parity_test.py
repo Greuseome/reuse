@@ -9,8 +9,8 @@ import ReuseNetwork as NN
 
 
 TEST_REUSE = False # switch to test with or without reuse
-INPUT_SIZE = 2
-ATARI = True # use Atari substrates or just single input
+INPUT_SIZE = 5
+ATARI = False # use Atari substrates or just single input
 
 SUBSTRATE_WIDTH = 8
 SUBSTRATE_HEIGHT = 10
@@ -100,51 +100,53 @@ for d in data:
     best_net.visualize()
     x = raw_input("")
 '''
-ne = NE.NeuroEvolution(INPUT_SIZE,1,[copy.deepcopy(best_net)],ATARI)
 
-best_fitness = -1
-best_net = None
-generation = 0
+if ATARI:
+    ne = NE.NeuroEvolution(INPUT_SIZE,1,[copy.deepcopy(best_net)],ATARI)
 
-while best_fitness < 0.9*(2**INPUT_SIZE):
-    
-    curr_best_fitness = -1
+    best_fitness = -1
+    best_net = None
+    generation = 0
 
-    for i in range(ne.populationSize):
-        currnet = ne.testNet(i)
-        fitness = 0
-        for d in data:
-            currnet.clearCharges()
-            inputs = []
-            if ATARI:
-                for i in d[0]:
-                    inputs.extend([i]*(SUBSTRATE_WIDTH*SUBSTRATE_HEIGHT))
-            else: inputs = d[0]
-            currnet.setInputs(inputs)
-            currnet.activate(currnet.inputs)
-            o = currnet.readOutputs()
-            fitness += 1 - abs(d[1] - o[0])
-        ne.evaluate(fitness,i)
+    while best_fitness < 0.9*(2**INPUT_SIZE):
+        
+        curr_best_fitness = -1
 
-        if fitness > curr_best_fitness:
-            curr_best_fitness = fitness
-            #numIns = 0
-            #for g in currnet.reuseGenomes[3]:
-            #    if g[3] == 'in':
-            #        numIns += 1
-            #currnet.visualize()
+        for i in range(ne.populationSize):
+            currnet = ne.testNet(i)
+            fitness = 0
+            for d in data:
+                currnet.clearCharges()
+                inputs = []
+                if ATARI:
+                    for i in d[0]:
+                        inputs.extend([i]*(SUBSTRATE_WIDTH*SUBSTRATE_HEIGHT))
+                else: inputs = d[0]
+                currnet.setInputs(inputs)
+                currnet.activate(currnet.inputs)
+                o = currnet.readOutputs()
+                fitness += 1 - abs(d[1] - o[0])
+            ne.evaluate(fitness,i)
 
-        if fitness > best_fitness:
-            best_fitness = fitness
-            best_net = copy.deepcopy(currnet)
-            best_net.visualize()
-            print "New best: " + str(fitness)
-    
-    if generation % 10 == 0:
-        print "Gen " + str(generation) + ", Best: " + str(curr_best_fitness) 
-    ne.nextGen()
-    generation += 1
-print "Generation "+str(generation)+", task complete."
+            if fitness > curr_best_fitness:
+                curr_best_fitness = fitness
+                #numIns = 0
+                #for g in currnet.reuseGenomes[3]:
+                #    if g[3] == 'in':
+                #        numIns += 1
+                #currnet.visualize()
+
+            if fitness > best_fitness:
+                best_fitness = fitness
+                best_net = copy.deepcopy(currnet)
+                best_net.visualize()
+                print "New best: " + str(fitness)
+        
+        if generation % 10 == 0:
+            print "Gen " + str(generation) + ", Best: " + str(curr_best_fitness) 
+        ne.nextGen()
+        generation += 1
+    print "Generation "+str(generation)+", task complete."
 
 for d in data:
     inputs = []

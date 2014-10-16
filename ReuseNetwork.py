@@ -18,7 +18,7 @@ from matplotlib.patches import Rectangle
 def sigmoid(x,b):
     # b is bias
     # using tanh instead of logistic to remedy overflow
-    return (math.tanh(10*(x-b))+1)/2.0
+    return (math.tanh(2*(x-b))+1)/2.0
 
     # unused logistic sigmoid: return 1 / (1 + math.exp(-10*(x-b)))
 
