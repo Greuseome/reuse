@@ -6,7 +6,7 @@ import numpy as np
 import copy
 
 # Atari substrate dimensions
-SUBSRATE_WIDTH = 8
+SUBSTRATE_WIDTH = 8
 SUBSTRATE_HEIGHT = 10
 SUBSTRATE_SIZE = SUBSTRATE_WIDTH*SUBSTRATE_HEIGHT
 
@@ -34,7 +34,7 @@ class GSP:
         self.bestFitnessSoFar = -1
         self.bestCurrFitness = -1
         self.gensWithoutImprovement = 0
-        self.burstsWithoutImrovement = 0
+        self.burstsWithoutImprovement = 0
         self.subPops = [] # make this an np array instead of list of pntrs?
         self.subPopBestIndiv = []
         self.subPopBestFitness = []
@@ -106,46 +106,46 @@ class GSP:
 
         return self.currnet
 
-    def evaluate(self,fittness,i):
+    def evaluate(self,fitness,i):
         # set fitness of ith individual in each subpop
         for sp in range(len(self.subPops)):
             self.subPops[sp].fitness[i] = fitness
             if fitness > self.subPopBestFitness[sp]:
                 self.subPopBestFitness[sp] = fitness
-                self.subPopBestIndiv[sp] = np.copy(self.subPops[sp].individual[i])
+                self.subPopBestIndiv[sp] = np.copy(self.subPops[sp].individuals[i])
                 if fitness > self.bestCurrFitness: self.bestCurrFitness = fitness
     
     def mutate(self):
         for subPop in self.subPops:
-            subPop.individuals += mutationStdev*np.random.randn(subPop.individuals.shape)
+            subPop.individuals += self.mutationStdev*np.random.randn(self.populationSize,
+                                                                        subPop.genomeSize)
 
-    def crossover(g1,g2):
-        # one point crossover of genomes
-        point = np.random.randint(0,len(g1)-1)
-        return g1[:point] + g2[point:], g2[:point] + g1[point:]
 
     def replace(self):
         for subPop in self.subPops:
             # sort individuals by fitness
             p = subPop.fitness.argsort()
             subPop.individuals = subPop.individuals[p]
-            subPop.fitness = subPop.fitness[sp]
+            subPop.fitness = subPop.fitness[p]
             
             j = 0 # current indiv to be replaced
-            for i in range(0.75*self.populationSize,self.populationSize):
+            for i in range(int(0.75*self.populationSize),self.populationSize):
                 # crossover
                 g1 = subPop.individuals[i]
-                g2 = np.random.choice[subPop.individuals[i:]]
+                idx = np.random.randint(i,self.populationSize)
+                g2 = subPop.individuals[idx]
                 point = np.random.randint(0,len(g1)-1)
-                subPop.individuals[j] = g1[:point] + g2[point:]
+                subPop.individuals[j][:point] = g1[:point] 
+                subPop.individuals[j][point:] = g2[point:]
                 j += 1
-                subPop.individuals[j] = g2[:point] + g1[point:]
+                subPop.individuals[j][:point] = g2[:point] 
+                subPop.individuals[j][point:] = g1[point:]
                 j += 1                
 
     def burstMutate(self):
-        for sp in self.subPops:
+        for sp in range(len(self.subPops)):
             self.subPops[sp].individuals = (self.burstStdev
-                * np.random.randn(self.subPops[sp].individuals.shape)
+                * np.random.randn(self.populationSize,self.subPops[sp].genomeSize)
                 + self.subPopBestIndiv[sp])
     
     def adaptNetworkSize(self):
@@ -172,8 +172,7 @@ class GSP:
             self.bestFitnessSoFar = self.bestCurrFitness
             self.gensWithoutImprovement = 0
 
-        for subPop in subPops: subPop.individuals.random.shuffle()
-
+        for subPop in self.subPops: np.random.shuffle(subPop.individuals)
 
 
               

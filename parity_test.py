@@ -6,7 +6,7 @@ import GSP
 import pickle
 import ReuseNetwork as NN
 import numpy as np
-
+import copy
 
 
 TEST_REUSE = False # switch to test with or without reuse
@@ -53,7 +53,7 @@ while k <= INPUT_SIZE:
                     for i in d[0]:
                         inputs.extend([i]*(SUBSTRATE_WIDTH*SUBSTRATE_HEIGHT))
                 else: inputs = d[0]
-                currnet.setInputs(inputs)
+                currnet.setInputs(np.array([1,2,3,4]).reshape((4,1)))
                 currnet.activate()
                 o = currnet.readOutputs()
                 fitness += 1 - abs(d[1] - o[0])

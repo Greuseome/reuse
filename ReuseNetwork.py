@@ -18,20 +18,17 @@ class ReuseNetwork:
         self.edgeWeights = np.zeros( (self.numNodes,self.numNodes) )
         self.edgeCharges = np.zeros( (self.numNodes,self.numNodes) )
         self.outCharges = np.zeros(numOutput) # network output layer values
-        self.nodeBias = np.empty(self.numNodes)
-        self.nodeBias[:] = 0.5
+        self.nodeBias = [0.5]*self.numNodes
 
         # at what index does each layer start
         self.inputStart = 0
         self.reuseStart = self.numInput
         self.hiddenStart = self.numInput
         self.outputStart = self.numInput
-
-        self.nodeBias[self.outputStart:] = 0.5
     
     def addHidden(self, bias=0.5):
         self.addNodes(1,self.outputStart)
-        np.insert(self.nodeBias, x, bias)
+        self.nodeBias.insert(self.outputStart,bias)
         self.numHidden += 1
         self.outputStart += 1
 
@@ -50,7 +47,7 @@ class ReuseNetwork:
         self.hiddenStart += n
         self.outputStart += n
         
-    def addNodes(numNodes,startIdx):
+    def addNodes(self,numNodes,startIdx):
         n = numNodes # how many to add
         x = startIdx # where to insert them
 
@@ -74,18 +71,18 @@ class ReuseNetwork:
     def setInputs(self,inputs):
         r = self.reuseStart
         o = self.outputStart
-        self.edgeCharges[:r,r:o] = self.edgeWeights[:r,r:o]*inputs[:,None]
+        self.edgeCharges[:r,r:o] = inputs*self.edgeWeights[:r,r:o]
 
     def activate(self):
         # how can we optimize further?
         for x in range(self.reuseStart,self.numNodes):
-            nodeOutput = sigmoid(np.sum(self.edgeCharges[x,:x],self.nodeBias[x]))
+            nodeOutput = sigmoid(np.sum(self.edgeCharges[x,:x]),self.nodeBias[x])
             if x < self.outputStart:
                 self.edgeCharges[x:,x] = nodeOutput*[self.edgeWeights[x:,x]]
-            else: self.outCharges[x] = nodeOutput
+            else: self.outCharges[x-self.outputStart] = nodeOutput
 
     def readOutputs(self):
-        return self.outCharges()
+        return self.outCharges
 
     def clearCharges(self):
         self.edgeCharges.fill(0)
