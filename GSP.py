@@ -13,11 +13,11 @@ SUBSTRATE_SIZE = SUBSTRATE_WIDTH*SUBSTRATE_HEIGHT
 class GSP:
 
     # GA parameters
-    populationSize = 12
+    populationSize = 20
     mutationStdev = 0.5
     burstStagThreshold = 10
     burstStdev = 1
-    burstsBeforeRecruit = 5
+    burstsBeforeRecruit = 2
 
     def __init__(self,numInput,numOutput,numInitialRecruits=5,reusables=[],atari=True):
         self.atari = atari
@@ -46,7 +46,7 @@ class GSP:
             self.currnet.addReuse(recruit)
             self.numReused += 1
 
-            if atari:
+            if self.atari:
                 self.reuseNumSubstrates.append(recruit.numInput / SUBSTRATE_SIZE)
                 numInputWeights = self.numSubstrates * self.reuseNumSubstrate[-1]
             else:
@@ -70,7 +70,7 @@ class GSP:
             currGene = 0
             # set input-to-input weights
             startIdx = self.currnet.reuseInfo[sp][0]
-            if atari:
+            if self.atari:
                 for j in range(self.numSubstrates):
                     for k in range(self.reuseNumSubstrates[sp]):
                         self.currnet.edgeWeights[j*SUBSTRATE_SIZE:j*SUBSTRATE_SIZE+SUBSTRATE_SIZE,
@@ -80,17 +80,24 @@ class GSP:
             else:
                 numReuseInputs = self.currnet.reuseInfo[sp][2]
                 numConnections = numReuseInputs * self.numInput
-                self.currnet.edgeWeights[:currnet.reuseStart,startIdx:startIdx+numReuseInputs] = (
-                    genome[currGene:currGene+numConnections].shape(self.numInput,numReuseInputs))
+                self.currnet.edgeWeights[:self.currnet.reuseStart,
+                    startIdx:startIdx+numReuseInputs] = (
+                    genome[currGene:currGene+numConnections].reshape(self.numInput,numReuseInputs))
                 currGene += numConnections
 
             # set output-to-output weights
+            print self.currnet.reuseInfo[sp]
             reuseOutputStart = startIdx + self.currnet.reuseInfo[sp][4]
             endIdx = startIdx + self.currnet.reuseInfo[sp][5]
             numReuseOutputs = endIdx - reuseOutputStart
-            numConnections = numReuseOutput * self.numOutput
+            numConnections = numReuseOutputs * self.numOutput
+            print len(genome)
+            print currGene
+            print numConnections
+            print numReuseOutputs
+            print self.numOutput
             self.currnet.edgeWeights[reuseOutputStart:endIdx,currnet.outputStart:] = (
-                genome[currGene:currGene+numConnections].shape(numReuseOutputs,self.numOutput))
+                genome[currGene:currGene+numConnections].reshape(numReuseOutputs,self.numOutput))
             currGene += numConnections
 
         for sp in range(len(self.subPops)-self.numReused):

@@ -9,7 +9,7 @@ import numpy as np
 import copy
 
 
-TEST_REUSE = False # switch to test with or without reuse
+TEST_REUSE = True # switch to test with or without reuse
 INPUT_SIZE = 4
 ATARI = False # use Atari substrates or just single input
 SUBSTRATE_WIDTH = 8
@@ -20,6 +20,7 @@ else: k = INPUT_SIZE
    
 reusables = []
 while k <= INPUT_SIZE:
+    print str(k) + ' bit parity'
     # solve k-bit parity using smaller parities
     
     # generate data
@@ -39,7 +40,7 @@ while k <= INPUT_SIZE:
     best_net = None
     generation = 0
 
-    while best_fitness < 0.9*(2**INPUT_SIZE):
+    while best_fitness < 0.9*(2**k):
         
         curr_best_fitness = -1
         
@@ -53,7 +54,7 @@ while k <= INPUT_SIZE:
                     for i in d[0]:
                         inputs.extend([i]*(SUBSTRATE_WIDTH*SUBSTRATE_HEIGHT))
                 else: inputs = d[0]
-                currnet.setInputs(np.array([1,2,3,4]).reshape((4,1)))
+                currnet.setInputs(np.array(inputs).reshape(k,1))
                 currnet.activate()
                 o = currnet.readOutputs()
                 fitness += 1 - abs(d[1] - o[0])
@@ -71,7 +72,8 @@ while k <= INPUT_SIZE:
         
         ne.nextGen() 
         generation += 1
-
+    
     print "Generation "+str(generation)+", task complete."
     reusables.append(best_net)
+    k += 1
 

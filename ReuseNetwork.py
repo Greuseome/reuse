@@ -34,16 +34,17 @@ class ReuseNetwork:
 
     def addReuse(self,reuseNet):
         n = reuseNet.numNodes
+        print n
         x = self.hiddenStart
         self.addNodes(reuseNet.numNodes,x)
         
         # fill in reuse net internal weights
-        self.edgeWeights[x:,:x+n] = reuseNet.edgeWeights
+        self.edgeWeights[x:x+n,x:x+n] = reuseNet.edgeWeights
 
         np.insert(self.nodeBias, x, reuseNet.nodeBias)
         self.numReuse += 1
         self.reuseInfo.append((x,n,reuseNet.reuseStart,
-                  reuseNet.hiddenStart,reuseNet.outputStart))                   
+                  reuseNet.hiddenStart,reuseNet.outputStart,x+n))                   
         self.hiddenStart += n
         self.outputStart += n
         
@@ -76,9 +77,9 @@ class ReuseNetwork:
     def activate(self):
         # how can we optimize further?
         for x in range(self.reuseStart,self.numNodes):
-            nodeOutput = sigmoid(np.sum(self.edgeCharges[x,:x]),self.nodeBias[x])
+            nodeOutput = sigmoid(np.sum(self.edgeCharges[:x,x]),self.nodeBias[x])
             if x < self.outputStart:
-                self.edgeCharges[x:,x] = nodeOutput*[self.edgeWeights[x:,x]]
+                self.edgeCharges[x,x:] = nodeOutput*self.edgeWeights[x,x:]
             else: self.outCharges[x-self.outputStart] = nodeOutput
 
     def readOutputs(self):
