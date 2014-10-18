@@ -34,14 +34,13 @@ class ReuseNetwork:
 
     def addReuse(self,reuseNet):
         n = reuseNet.numNodes
-        print n
         x = self.hiddenStart
         self.addNodes(reuseNet.numNodes,x)
         
         # fill in reuse net internal weights
         self.edgeWeights[x:x+n,x:x+n] = reuseNet.edgeWeights
 
-        np.insert(self.nodeBias, x, reuseNet.nodeBias)
+        self.nodeBias = self.nodeBias[:x] + reuseNet.nodeBias + self.nodeBias[x:]
         self.numReuse += 1
         self.reuseInfo.append((x,n,reuseNet.reuseStart,
                   reuseNet.hiddenStart,reuseNet.outputStart,x+n))                   

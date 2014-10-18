@@ -86,17 +86,11 @@ class GSP:
                 currGene += numConnections
 
             # set output-to-output weights
-            print self.currnet.reuseInfo[sp]
             reuseOutputStart = startIdx + self.currnet.reuseInfo[sp][4]
             endIdx = startIdx + self.currnet.reuseInfo[sp][5]
-            numReuseOutputs = endIdx - reuseOutputStart
+            numReuseOutputs = self.currnet.reuseInfo[sp][1] - self.currnet.reuseInfo[sp][4]
             numConnections = numReuseOutputs * self.numOutput
-            print len(genome)
-            print currGene
-            print numConnections
-            print numReuseOutputs
-            print self.numOutput
-            self.currnet.edgeWeights[reuseOutputStart:endIdx,currnet.outputStart:] = (
+            self.currnet.edgeWeights[reuseOutputStart:endIdx,self.currnet.outputStart:] = (
                 genome[currGene:currGene+numConnections].reshape(numReuseOutputs,self.numOutput))
             currGene += numConnections
 
