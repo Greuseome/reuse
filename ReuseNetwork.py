@@ -18,7 +18,8 @@ class ReuseNetwork:
         self.edgeWeights = np.zeros( (self.numNodes,self.numNodes) )
         self.edgeCharges = np.zeros( (self.numNodes,self.numNodes) )
         self.outCharges = np.zeros(numOutput) # network output layer values
-        self.nodeBias = np.empty(self.numNodes).fill(0.5)
+        self.nodeBias = np.empty(self.numNodes)
+        self.nodeBias[:] = 0.5
 
         # at what index does each layer start
         self.inputStart = 0
@@ -78,8 +79,8 @@ class ReuseNetwork:
     def activate(self):
         # how can we optimize further?
         for x in range(self.reuseStart,self.numNodes):
-            nodeOutput = sigmoid(np.sum(self.edgeCharges[x,:x],self.nodeBias[x])
-            if x < self.outputStart: 
+            nodeOutput = sigmoid(np.sum(self.edgeCharges[x,:x],self.nodeBias[x]))
+            if x < self.outputStart:
                 self.edgeCharges[x:,x] = nodeOutput*[self.edgeWeights[x:,x]]
             else: self.outCharges[x] = nodeOutput
 

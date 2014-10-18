@@ -13,7 +13,7 @@ SUBSTRATE_SIZE = SUBSTRATE_WIDTH*SUBSTRATE_HEIGHT
 class GSP:
 
     # GA parameters
-    populationSize = 100
+    populationSize = 12
     mutationStdev = 0.5
     burstStagThreshold = 10
     burstStdev = 1
@@ -28,7 +28,7 @@ class GSP:
             self.reuseNumSubstrates = []
         self.numOutput = numOutput
         self.currnet = ReuseNetwork.ReuseNetwork(numInput,numOutput)
-        self.reusables = copy.deepcopt(reusables)
+        self.reusables = copy.deepcopy(reusables)
         self.numReused = 0
         self.bestNetSoFar = None
         self.bestFitnessSoFar = -1
@@ -41,7 +41,7 @@ class GSP:
         for i in range(numInitialRecruits): self.newRecruit()
 
     def newRecruit(self):
-        if len(reusables) > 0:
+        if len(self.reusables) > 0:
             recruit = self.reusables.pop()
             self.currnet.addReuse(recruit)
             self.numReused += 1
@@ -59,7 +59,7 @@ class GSP:
             self.currnet.addHidden()
             genomeSize = 1 + self.numInput + self.numOutput # plus 1 for node bias
 
-        self.subPops.append(Subpopulation.Subpopulation(genomeSize,self.populationSize)
+        self.subPops.append(Subpopulation.Subpopulation(genomeSize,self.populationSize))
         self.subPopBestIndiv.append(None)
         self.subPopBestFitness.append(-1)
 
@@ -79,9 +79,9 @@ class GSP:
                         currGene += 1
             else:
                 numReuseInputs = self.currnet.reuseInfo[sp][2]
-                numConnections = numReuseInputs * self.numInputs
+                numConnections = numReuseInputs * self.numInput
                 self.currnet.edgeWeights[:currnet.reuseStart,startIdx:startIdx+numReuseInputs] = (
-                    genome[currGene:currGene+numConnections].shape(self.numInputs,numReuseInputs))
+                    genome[currGene:currGene+numConnections].shape(self.numInput,numReuseInputs))
                 currGene += numConnections
 
             # set output-to-output weights
@@ -90,18 +90,19 @@ class GSP:
             numReuseOutputs = endIdx - reuseOutputStart
             numConnections = numReuseOutput * self.numOutput
             self.currnet.edgeWeights[reuseOutputStart:endIdx,currnet.outputStart:] = (
-                genome[currGene:currGene+numConnections].shape(numReuseOutputs,self.numOutputs))
+                genome[currGene:currGene+numConnections].shape(numReuseOutputs,self.numOutput))
             currGene += numConnections
 
-        for sp in range(len(self.subPops)-len(self.reused)):
+        for sp in range(len(self.subPops)-self.numReused):
+            currGene = 0
             genome = self.subPops[sp].individuals[i]
             idx = self.currnet.hiddenStart+sp
             # set input weights
-            self.currnet.edgeWeights[:currnet.reuseStart,idx] = genome[currGene:currGene+self.numInputs]
-            currGene += self.numInputs
+            self.currnet.edgeWeights[:self.currnet.reuseStart,idx] = genome[currGene:currGene+self.numInput]
+            currGene += self.numInput
             # set output weights
-            self.currnet.edgeWeights[idx,currnet.outputStart:] = genome[currGene:currGene+self.numOutputs]
-            currGene += self.numOutputs
+            self.currnet.edgeWeights[idx,self.currnet.outputStart:] = genome[currGene:currGene+self.numOutput]
+            currGene += self.numOutput
 
         return self.currnet
 
@@ -109,7 +110,7 @@ class GSP:
         # set fitness of ith individual in each subpop
         for sp in range(len(self.subPops)):
             self.subPops[sp].fitness[i] = fitness
-            if fitness > self.subPopBestFitness[sp]
+            if fitness > self.subPopBestFitness[sp]:
                 self.subPopBestFitness[sp] = fitness
                 self.subPopBestIndiv[sp] = np.copy(self.subPops[sp].individual[i])
                 if fitness > self.bestCurrFitness: self.bestCurrFitness = fitness
@@ -149,6 +150,7 @@ class GSP:
     
     def adaptNetworkSize(self):
         # decide whether to lesion or recruit new
+        decision = 0
 
 
     def nextGen(self):

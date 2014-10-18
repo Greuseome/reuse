@@ -7,5 +7,7 @@ import numpy as np
 class Subpopulation:
     
     def __init__(self, genomeSize, populationSize):
+        self.genomeSize = genomeSize
+        self.populationSize = populationSize
         self.individuals = np.random.randn(self.populationSize,self.genomeSize)
         self.fitness = np.empty(self.populationSize).fill(-1)
