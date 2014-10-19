@@ -18,7 +18,7 @@ class ReuseNetwork:
         self.edgeWeights = np.zeros( (self.numNodes,self.numNodes) )
         self.edgeCharges = np.zeros( (self.numNodes,self.numNodes) )
         self.outCharges = np.zeros(numOutput) # network output layer values
-        self.nodeBias = [0.5]*self.numNodes
+        self.nodeBias = [0.5]*self.numNodes # make numpy array!!!!
 
         # at what index does each layer start
         self.inputStart = 0
@@ -69,14 +69,49 @@ class ReuseNetwork:
         self.numNodes += n
     
     def setInputs(self,inputs):
+        # how can we optimize further?
         r = self.reuseStart
         o = self.outputStart
         self.edgeCharges[:r,r:o] = inputs*self.edgeWeights[:r,r:o]
 
     def activate(self):
         # how can we optimize further?
+        r = 0 # number of reused nets we've activated so far
+        outputInchargeStart = self.reuseStart
+        if r < len(self.reuseInfo):
+            startIdx = self.reuseInfo[r][0]
+            startHidden = startIdx + self.reuseInfo[r][2]
+            startOutput = startIdx + self.reuseInfo[r][4]
+            endIdx = self.reuseInfo[r][5]
+            outputInchargeStart = startOutput
+
         for x in range(self.reuseStart,self.numNodes):
-            nodeOutput = sigmoid(np.sum(self.edgeCharges[:x,x]),self.nodeBias[x])
+            if r < len(self.reuseInfo): # activate reuse net
+                if x < startHidden: # reuse input
+                    # connections come from currnet input
+                    inCharges = self.edgeCharges[:self.reuseStart,x]
+                elif x < startOutput: # reuse reuse or hidden
+                    # connections come from reused input
+                    inCharges = self.edgeCharges[startIdx:startHidden,x]
+                elif x < endIdx: # reuse output
+                    # connections come from reused hidden
+                    inCharges = self.edgeCharges[startHidden:startOutput,x]
+                else: 
+                    r += 1 # move to next reuse net
+                    if r < len(self.reuseInfo):
+                        startIdx = self.reuseInfo[r][0]
+                        startHidden = startIdx + self.reuseInfo[r][2]
+                        startOutput = startIdx + self.reuseInfo[r][4]
+                        endIdx = self.reuseInfo[r][5]
+            elif x < self.outputStart: # currnet hidden
+                # connections come from currnet input
+                inCharges = self.edgeCharges[:self.reuseStart,x]
+            else: # currnet output
+                # connections come from reuse output and currnet hidden
+                inCharges = self.edgeCharges[outputInchargeStart:self.outputStart,x]
+
+            nodeOutput = sigmoid(np.sum(inCharges),self.nodeBias[x])
+            
             if x < self.outputStart:
                 self.edgeCharges[x,x:] = nodeOutput*self.edgeWeights[x,x:]
             else: self.outCharges[x-self.outputStart] = nodeOutput
