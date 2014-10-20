@@ -25,6 +25,13 @@ def visualize(net):
 
     # set node positions
     for x in range(net.numNodes):
+        for r in range(net.numReuse-1):
+            if x >= net.reuseInfo[r][0] and x < net.reuseInfo[r+1][0]:
+                colors.append(r+1)
+        if net.numReuse > 0 and x >= net.reuseInfo[-1][0] and x < net.hiddenStart:
+            colors.append(net.numReuse+1)
+        elif x < net.reuseStart or x >= net.hiddenStart:
+            colors.append(0)
         G.add_node(x)
         nodes.append(x)
         currLayer = 0
@@ -54,8 +61,7 @@ def visualize(net):
                 edgecolors.append(net.edgeWeights[x,y])
         
     # actually draw everything
-    nx.draw(G,pos,node_color='purple',edge_color=edgecolors,
-        with_labels=False,edge_cmap=plt.cm.RdBu)  
+    nx.draw(G,pos,node_color=colors,cmap=plt.cm.Purples,with_labels=False)  
     nx.draw_networkx_edges(G,pos,edge_color=edgecolors,
                         edge_cmap=plt.cm.RdBu,width=5)
     #nx.draw_networkx_edge_labels(G,pos,edge_labels)

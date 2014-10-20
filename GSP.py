@@ -15,7 +15,7 @@ class GSP:
     # GA parameters
     populationSize = 20
     mutationStdev = 0.5
-    burstStagThreshold = 10
+    burstStagThreshold = 5
     burstStdev = 1
     burstsBeforeRecruit = 2
 
@@ -27,7 +27,7 @@ class GSP:
             self.numInput *= SUBSTRATE_SIZE
             self.reuseNumSubstrates = []
         self.numOutput = numOutput
-        self.currnet = ReuseNetwork.ReuseNetwork(numInput,numOutput)
+        self.currnet = ReuseNetwork.ReuseNetwork(self.numInput,self.numOutput)
         self.reusables = copy.deepcopy(reusables)
         self.numReused = 0
         self.bestNetSoFar = None
@@ -42,13 +42,14 @@ class GSP:
 
     def newRecruit(self):
         if len(self.reusables) > 0:
+            print "New Reuse"
             recruit = self.reusables.pop()
             self.currnet.addReuse(recruit)
             self.numReused += 1
 
             if self.atari:
                 self.reuseNumSubstrates.append(recruit.numInput / SUBSTRATE_SIZE)
-                numInputWeights = self.numSubstrates * self.reuseNumSubstrate[-1]
+                numInputWeights = self.numSubstrates * self.reuseNumSubstrates[-1]
             else:
                 numInputWeights = self.numInput*recruit.numInput
 
@@ -56,15 +57,17 @@ class GSP:
             genomeSize = numInputWeights+numOutputWeights
 
         else:
+            print "New Hidden"
             self.currnet.addHidden()
             genomeSize = 1 + self.numInput + self.numOutput # plus 1 for node bias
-
         self.subPops.append(Subpopulation.Subpopulation(genomeSize,self.populationSize))
         self.subPopBestIndiv.append(None)
         self.subPopBestFitness.append(-1)
 
     def testNet(self,i):
         # set up the ith net for evaluation
+
+        # apply reuse genomes
         for sp in range(self.numReused):
             genome = self.subPops[sp].individuals[i]
             currGene = 0
@@ -94,11 +97,16 @@ class GSP:
                 genome[currGene:currGene+numConnections].reshape(numReuseOutputs,self.numOutput))
             currGene += numConnections
 
+        # apply hidden genomes
         for sp in range(len(self.subPops)-self.numReused):
-            currGene = 0
-            genome = self.subPops[sp].individuals[i]
+            genome = self.subPops[sp+self.numReused].individuals[i]
+            currGene = 1 # skip node bias
             idx = self.currnet.hiddenStart+sp
+            self.currnet.nodeBias[idx] = genome[0]
             # set input weights
+            #print len(genome)
+            #print len(self.currnet.edgeWeights[:self.currnet.reuseStart,idx])
+            #print len(genome[currGene:currGene+self.numInput])
             self.currnet.edgeWeights[:self.currnet.reuseStart,idx] = genome[currGene:currGene+self.numInput]
             currGene += self.numInput
             # set output weights

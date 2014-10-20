@@ -69,10 +69,10 @@ class ReuseNetwork:
         self.numNodes += n
     
     def setInputs(self,inputs):
-        # how can we optimize further?
+        # how can we optimize further? 
         r = self.reuseStart
         o = self.outputStart
-        self.edgeCharges[:r,r:o] = inputs*self.edgeWeights[:r,r:o]
+        self.edgeCharges[:r,r:o] = inputs.reshape(r,1)*self.edgeWeights[:r,r:o]
 
     def activate(self):
         # how can we optimize further?

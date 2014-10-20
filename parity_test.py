@@ -7,11 +7,12 @@ import pickle
 import ReuseNetwork as NN
 import numpy as np
 import copy
+import NetViz
 
 
 TEST_REUSE = True # switch to test with or without reuse
-INPUT_SIZE = 4
-ATARI = False # use Atari substrates or just single input
+INPUT_SIZE = 3
+ATARI = True # use Atari substrates or just single input
 SUBSTRATE_WIDTH = 8
 SUBSTRATE_HEIGHT = 10
 
@@ -48,13 +49,13 @@ while k <= INPUT_SIZE:
             currnet = ne.testNet(i)
             fitness = 0
             for d in data:
-                currnet.clearCharges()
+                #currnet.clearCharges()
                 inputs = []
                 if ATARI:
                     for i in d[0]:
                         inputs.extend([i]*(SUBSTRATE_WIDTH*SUBSTRATE_HEIGHT))
                 else: inputs = d[0]
-                currnet.setInputs(np.array(inputs).reshape(k,1))
+                currnet.setInputs(np.array(inputs))
                 currnet.activate()
                 o = currnet.readOutputs()
                 fitness += 1 - abs(d[1] - o[0])
@@ -66,7 +67,8 @@ while k <= INPUT_SIZE:
                     best_fitness = fitness
                     best_net = copy.deepcopy(currnet)
                     print fitness
-        
+                    NetViz.visualize(best_net)
+
         if generation % 100 == 0:
             print "Gen " + str(generation)
         
@@ -74,6 +76,7 @@ while k <= INPUT_SIZE:
         generation += 1
     
     print "Generation "+str(generation)+", task complete."
+    NetViz.visualize(best_net)
     reusables.append(best_net)
     k += 1
 
