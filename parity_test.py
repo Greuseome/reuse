@@ -8,11 +8,11 @@ import ReuseNetwork as NN
 import numpy as np
 import copy
 import NetViz
-
+import time
 
 TEST_REUSE = True # switch to test with or without reuse
-INPUT_SIZE = 3
-ATARI = True # use Atari substrates or just single input
+INPUT_SIZE = 4
+ATARI = False # use Atari substrates or just single input
 SUBSTRATE_WIDTH = 8
 SUBSTRATE_HEIGHT = 10
 
@@ -80,3 +80,4 @@ while k <= INPUT_SIZE:
     reusables.append(best_net)
     k += 1
 
+time.sleep(100)

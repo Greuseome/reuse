@@ -10,10 +10,13 @@ SUBSTRATE_WIDTH = 8
 SUBSTRATE_HEIGHT = 10
 SUBSTRATE_SIZE = SUBSTRATE_WIDTH*SUBSTRATE_HEIGHT
 
+# Self loops on hidden nodes?
+SELF_LOOPS = True
+
 class GSP:
 
     # GA parameters
-    populationSize = 20
+    populationSize = 100
     mutationStdev = 0.5
     burstStagThreshold = 5
     burstStdev = 1
@@ -59,7 +62,8 @@ class GSP:
         else:
             print "New Hidden"
             self.currnet.addHidden()
-            genomeSize = 1 + self.numInput + self.numOutput # plus 1 for node bias
+            genomeSize = 1 + self.numInput + self.numOutput # first gene node bias
+            if SELF_LOOPS: genomeSize += 1 # second gene self loop weight
         self.subPops.append(Subpopulation.Subpopulation(genomeSize,self.populationSize))
         self.subPopBestIndiv.append(None)
         self.subPopBestFitness.append(-1)
@@ -100,9 +104,12 @@ class GSP:
         # apply hidden genomes
         for sp in range(len(self.subPops)-self.numReused):
             genome = self.subPops[sp+self.numReused].individuals[i]
-            currGene = 1 # skip node bias
             idx = self.currnet.hiddenStart+sp
-            self.currnet.nodeBias[idx] = genome[0]
+            self.currnet.nodeBias[idx] = genome[0] 
+            currGene = 1 # skip node bias
+            if SELF_LOOPS:
+                self.currnet.edgeWeights[idx,idx] = genome[1]
+                currGene += 1 # skip self loop weight
             # set input weights
             #print len(genome)
             #print len(self.currnet.edgeWeights[:self.currnet.reuseStart,idx])
@@ -112,6 +119,7 @@ class GSP:
             # set output weights
             self.currnet.edgeWeights[idx,self.currnet.outputStart:] = genome[currGene:currGene+self.numOutput]
             currGene += self.numOutput
+            if currGene != len(genome): raise Exception('Bad genome application')
 
         return self.currnet
 
