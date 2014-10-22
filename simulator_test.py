@@ -38,7 +38,7 @@ def evolve_atari_network(game, input_size):
                 output = currnet.readOutputs()
 
                 sim.write('{},18\n'.format(np.argmax(output)))
-               
+
             ne.evaluate(fitness, i)
 
             if fitness > curr_best_fitness:
@@ -64,9 +64,11 @@ def evolve_atari_network(game, input_size):
         generation += 1
     print "Generation "+str(generation)+", task complete."
 
-if __name__=='__main__':
+
+
+if __name__ == '__main__':
     if len(sys.argv) > 1:
-	    game = sys.argv[1]
+        game = sys.argv[1]
     else: game = 'breakout'
     evolve_atari_network(game,2)
 

@@ -59,9 +59,10 @@ class Simulator(object):
     def running(self):
         """ use this for polling stdin """
         return self.proc.poll() is None and not self.terminated
-    
+
     def kill(self):
         self.proc.kill()
+
 """
 sim = Simulator('freeway')
 
