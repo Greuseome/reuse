@@ -13,7 +13,7 @@ SUBSTRATE_SIZE = SUBSTRATE_WIDTH*SUBSTRATE_HEIGHT
 class GSP:
 
     # GA parameters
-    populationSize = 20
+    populationSize = 100
     mutationStdev = 0.5
     burstStagThreshold = 5
     burstStdev = 1
