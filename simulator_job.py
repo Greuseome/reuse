@@ -3,6 +3,7 @@ import cPickle
 import sys, os
 import numpy as np
 import tempfile
+import shutil
 
 def run_game(game, net, result_file):
     currnet = cPickle.load(open(net,'r'))
@@ -25,7 +26,7 @@ def run_game(game, net, result_file):
     f.write('{}'.format(fitness))
     f.close()
 
-    os.rename(tmp,result_file)
+    shutil.move(tmp, result_file)
 
 if __name__ == '__main__':
     if len(sys.argv) > 2:
