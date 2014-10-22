@@ -74,6 +74,7 @@ class SimulatorJob(object):
         self.game = game
         self.netfile = netfile
         self.resultfile = resultfile
+        self.reward = None
 
         self.game_str = './condor_submit_sim.sh {} {} {}' \
                          .format(game, netfile, resultfile)
@@ -87,12 +88,13 @@ class SimulatorJob(object):
             raise Exception('Error submitting job. {}'.format(self.game_str))
 
     def done(self):
-        return os.path.exists(self.resultfile)
+        if os.path.exists(self.resultfile):
+            self.update_reward()
+            return True
+        return False
 
-    def reward(self):
+    def update_reward(self):
         f = open(self.resultfile, 'r')
-        rew = int(f.readline())
+        self.reward = int(f.readline())
         f.close()
-
-        return rew
 

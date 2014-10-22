@@ -1,30 +1,36 @@
 import sys, os, time
+import shutil
 import GSP as NE
 import numpy as np
-import copy
-import cPickle
 from uuid import uuid1
 
 from simulator import SimulatorJob
 
+def find_num_objects(game):
+    images_dir = os.path.join('/u/mhollen/sift/ale-assets/images', game)
+    return len(os.listdir(images_dir))
+
+
 def evolve_atari_network(game, input_size):
 
-    ne = NE.GSP(input_size,18,2,[],True)
+    ne = NE.GSP(input_size, 18, 2, [], True)
 
     NUM_GENERATIONS = 1000
 
-    game_dir = os.path.join(os.getcwdu(), 'nets', game, str(uuid1()))
+    evolve_id = str(uuid1())
+    game_dir = os.path.join(os.getcwdu(), 'results', game, evolve_id)
     if not os.path.exists(game_dir):
         os.makedirs(game_dir)
 
-    print "all files saved to:"
+    print '*'*40
+    print "All files will be saved to:"
     print game_dir
+    print '*'*40
 
     best_fitness = -10000000
-    best_net = None
     generation = 0
 
-    while generation < NUM_GENERATIONS:
+    for generation in range(NUM_GENERATIONS):
         curr_best_fitness = -10000000
 
         generation_dir = os.path.join(game_dir, 'gen-%04d' % generation)
@@ -34,13 +40,13 @@ def evolve_atari_network(game, input_size):
         # test each subpopulation (run each on condor)
         all_sims = []
         for i in range(ne.populationSize):
-            currnet_base = os.path.join(generation_dir, 'net-%04d' % i)
+            currnet_base = os.path.join(generation_dir, '.net-%04d' % i)
             currnet_result = '{}.result'.format(currnet_base)
-            currnet_netfile= '{}.net'.format(currnet_base)
+            currnet_netfile = '{}.net'.format(currnet_base)
 
             # save network config to file
             currnet = ne.testNet(i)
-            cPickle.dump(currnet, open(currnet_netfile,'wb'))
+            currnet.save(currnet_netfile)
 
             # run simulator on network
             sim = SimulatorJob(i, game, currnet_netfile, currnet_result)
@@ -50,11 +56,10 @@ def evolve_atari_network(game, input_size):
         finished = False
         while not finished:
             finished = np.all([s.done() for s in all_sims])
-            time.sleep(1)
+            time.sleep(.2)
 
         for sim in all_sims:
-            fitness = sim.reward()
-            print "sim-{}: {}".format(sim.index, sim.reward())
+            fitness = sim.reward
 
             ne.evaluate(fitness, sim.index)
 
@@ -62,35 +67,34 @@ def evolve_atari_network(game, input_size):
                 curr_best_fitness = fitness
 
             if fitness > best_fitness:
+                # save the best
                 best_fitness = fitness
+                os.rename(sim.netfile,
+                          os.path.join(game_dir,'best_network.pkl'))
+            else:
+                # delete temp network file
+                os.remove(sim.netfile)
 
-        with open('nets/{}.curve'.format(game),'a') as curve:
+        # delete generation info
+        shutil.rmtree(generation_dir)
+
+        # write current best fitness to file
+        with open(os.path.join(game_dir, 'fitness.history'),'a') as curve:
             curve.write(str(curr_best_fitness)+',') 
 
         print "Gen " + str(generation) + ", Best: " + str(curr_best_fitness) 
-        ne.nextGen()
-        generation += 1
-    print "Generation "+str(generation)+", task complete."
 
+        # evolve
+        ne.nextGen()
+
+    print "Generation "+str(generation)+", task complete."
 
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         game = sys.argv[1]
-    else: game = 'breakout'
-    # todo: find size of game
-    evolve_atari_network(game,2)
-
-
-"""
-for d in data:
-    best_net.clearCharges()
-    best_net.setInputs(inputs)
-    best_net.activate(best_net.inputs)
-    best_net.visualize()
-    x = raw_input("")
-"""
-
-
+    else:
+        game = 'breakout'
+    evolve_atari_network(game, find_num_objects(game))
 
 

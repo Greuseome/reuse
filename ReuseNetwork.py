@@ -1,6 +1,7 @@
 # Class for nets that reuse other nets. So optimized.
 
 import numpy as np
+import cPickle
 
 def sigmoid(x,b):
     return (np.tanh(2*(x-b))+1)/2.0
@@ -124,6 +125,9 @@ class ReuseNetwork:
 
     def clearCharges(self):
         self.edgeCharges.fill(0)
+
+    def save(self, path):
+        cPickle.dump(self, open(path,'wb'))
         
 
 if __name__=='__main__':
