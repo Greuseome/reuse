@@ -24,7 +24,7 @@ cat > $JOBFILE <<EOL
 
 Universe = vanilla
 Executable = /usr/local/bin/python
-Arguments = /u/mhollen/sift/reuse/simulator_job.py $GAME $NETWORK $RESULT
+Arguments = $PWD/simulator_job.py $GAME $NETWORK $RESULT
 Requirements = InMastodon && Arch == "x86_64"
 
 Error = $RESULT.err
