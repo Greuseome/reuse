@@ -69,8 +69,11 @@ def evolve_atari_network(game, input_size):
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         game = sys.argv[1]
-    else: game = 'breakout'
-    evolve_atari_network(game,2)
+        input_size = int(sys.argv[2])
+    else: 
+        game = 'breakout'
+        input_size = 2
+    evolve_atari_network(game,input_size)
 
 
 """
