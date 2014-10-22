@@ -1,7 +1,8 @@
 from simulator import Simulator
 import cPickle
-import sys
+import sys, os
 import numpy as np
+import tempfile
 
 def run_game(game, net, result_file):
     currnet = cPickle.load(open(net,'r'))
@@ -19,9 +20,12 @@ def run_game(game, net, result_file):
 
         sim.write('{},18\n'.format(np.argmax(output)))
 
-    f = open(result_file, 'w')
+    tmp = tempfile.mktemp()
+    f = open(tmp, 'w')
     f.write('{}'.format(fitness))
     f.close()
+
+    os.rename(tmp,result_file)
 
 if __name__ == '__main__':
     if len(sys.argv) > 2:
