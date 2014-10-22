@@ -2,6 +2,7 @@ import sys, os, time
 import shutil
 import GSP as NE
 import numpy as np
+import cPickle
 from uuid import uuid1
 
 from simulator import SimulatorJob
@@ -13,9 +14,12 @@ def find_num_objects(game):
     return len(os.listdir(images_dir))
 
 
-def evolve_atari_network(game, input_size):
+def evolve_atari_network(game, input_size, reusables):
+    
+    if len(reusables) > 0: numInitialRecruits = 1
+    else: numInitialRecruits = 2
 
-    ne = NE.GSP(input_size, 18, 2, [], True)
+    ne = NE.GSP(input_size, 18, numInitialRecruits, reusables, True)
 
     NUM_GENERATIONS = 1000
 
@@ -99,8 +103,10 @@ def evolve_atari_network(game, input_size):
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         game = sys.argv[1]
-    else:
-        game = 'breakout'
-    evolve_atari_network(game, find_num_objects(game))
+    else: raise Exception("No game specified")
+    reusables = []
+    for reuseNet in sys.argv[2:]:
+        reusables.append(cPickle.load(open(reuseNet,'r')))
+    evolve_atari_network(game, find_num_objects(game), reusables)
 
 
