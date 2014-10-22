@@ -2,4 +2,4 @@
 
 virtualenv pyenv
 source pyenv/bin/activate
-pip install -r requirments.txt
+pip install -r requirements.txt
