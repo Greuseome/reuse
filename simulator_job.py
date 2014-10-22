@@ -20,7 +20,7 @@ def run_game(game, net, result_file):
         sim.write('{},18\n'.format(np.argmax(output)))
 
     f = open(result_file, 'w')
-    f.write('{}'.format(sim.reward))
+    f.write('{}'.format(fitness))
     f.close()
 
 if __name__ == '__main__':

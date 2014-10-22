@@ -78,6 +78,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         game = sys.argv[1]
     else: game = 'breakout'
+    # todo: find size of game
     evolve_atari_network(game,2)
 
 
