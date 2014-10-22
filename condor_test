@@ -1,0 +1,24 @@
+######################################### 
+# 
+# Example 4: Show off some fancy features 
+# and local predicates. 
+# 
+#########################################
+
++Group = "GRAD" 
++Project = "AI_ROBOTICS"
+
++ProjectDescription = "testing condor"
+
+Universe = vanilla
+#Executable = /u/mhollen/sift/ale/run_ale.sh 
+Executable = /usr/local/bin/python
+Arguments = /u/mhollen/sift/reuse/random_freeway.py
+#Arguments = /u/mhollen/sift/ale/python_test.py
+Requirements = InMastodon && Arch == "x86_64"
+
+Error = condor_test.err.$(Process) 
+Output = condor_test.out.$(Process) 
+Log = condor_test.log
+
+Queue
