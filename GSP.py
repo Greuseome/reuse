@@ -17,7 +17,7 @@ class GSP:
     mutationStdev = 0.5
     burstStagThreshold = 5
     burstStdev = 1
-    burstsBeforeRecruit = 2
+    burstsBeforeRecruit = 1
 
     def __init__(self,numInput,numOutput,numInitialRecruits=5,reusables=[],atari=True):
         self.atari = atari

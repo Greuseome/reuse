@@ -10,7 +10,7 @@ class Simulator(object):
         self.game = game
         game_str = './run_ale.sh \
                     -game_controller fifo \
-                    ../ale-assets/roms/{}.bin' \
+                    /u/mhollen/sift/ale/roms/{}.bin' \
                     .format(game)
         self.proc = subprocess.Popen(game_str.split(),
                                 stdout = subprocess.PIPE,
@@ -48,7 +48,6 @@ class Simulator(object):
 
         # we should be getting objects and reward from ALE
         objects, episode = line.split(self.delimiter)[:2]
-
         # convert reward to array
         self.terminated =  bool(int(episode.split(',')[0]))
         self.reward     =  int(episode.split(',')[1])
@@ -60,7 +59,9 @@ class Simulator(object):
     def running(self):
         """ use this for polling stdin """
         return self.proc.poll() is None and not self.terminated
-
+    
+    def kill(self):
+        self.proc.kill()
 """
 sim = Simulator('freeway')
 

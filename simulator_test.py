@@ -1,20 +1,24 @@
+import sys
 import GSP as NE
 import numpy as np
 import copy
+import pickle
 
 from simulator import Simulator
 
 
 def evolve_atari_network(game, input_size):
 
-    ne = NE.GSP(input_size*80,18,8,[],False)
+    ne = NE.GSP(input_size,18,2,[],True)
 
-    best_fitness = -1
+    NUM_GENERATIONS = 1000
+
+    best_fitness = -10000000
     best_net = None
     generation = 0
 
-    while best_fitness < 0.9*(2**input_size):
-        curr_best_fitness = -1
+    while generation < NUM_GENERATIONS:
+        curr_best_fitness = -10000000
 
         # test each subpopulation
         for i in range(ne.populationSize):
@@ -26,7 +30,7 @@ def evolve_atari_network(game, input_size):
                 sim.read()
                 fitness += sim.reward
 
-                print "{}, ".format(fitness), 
+                #print "{}, ".format(fitness), 
 
                 currnet.clearCharges()
                 currnet.setInputs(sim.objects.reshape(input_size*80,1))
@@ -34,7 +38,7 @@ def evolve_atari_network(game, input_size):
                 output = currnet.readOutputs()
 
                 sim.write('{},18\n'.format(np.argmax(output)))
-
+               
             ne.evaluate(fitness, i)
 
             if fitness > curr_best_fitness:
@@ -43,20 +47,29 @@ def evolve_atari_network(game, input_size):
 
             if fitness > best_fitness:
                 best_fitness = fitness
+                pickle.dump(currnet, open('nets/{}.net'.format(game),'wb'))
                 #best_net = copy.deepcopy(currnet)
                 #best_net.visualize()
 
             print "gen: {}\ti: {}\trew: {}\tbest: {}\t end: {}" \
                    .format(generation, i, fitness,
                            best_fitness, sim.terminated)
+            sim.kill()
 
+        with open('nets/{}.curve'.format(game),'a') as curve:
+            curve.write(str(curr_best_fitness)+',') 
 
         print "Gen " + str(generation) + ", Best: " + str(curr_best_fitness) 
         ne.nextGen()
         generation += 1
     print "Generation "+str(generation)+", task complete."
 
-evolve_atari_network('freeway',3)
+if __name__=='__main__':
+    if len(sys.argv) > 1:
+	    game = sys.argv[1]
+    else: game = 'breakout'
+    evolve_atari_network(game,2)
+
 
 """
 for d in data:
