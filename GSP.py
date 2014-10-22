@@ -94,7 +94,7 @@ class GSP:
 
             # set output-to-output weights
             reuseOutputStart = startIdx + self.currnet.reuseInfo[sp][4]
-            endIdx = startIdx + self.currnet.reuseInfo[sp][5]
+            endIdx = self.currnet.reuseInfo[sp][5]
             numReuseOutputs = self.currnet.reuseInfo[sp][1] - self.currnet.reuseInfo[sp][4]
             numConnections = numReuseOutputs * self.numOutput
             self.currnet.edgeWeights[reuseOutputStart:endIdx,self.currnet.outputStart:] = (
@@ -127,7 +127,7 @@ class GSP:
         # set fitness of ith individual in each subpop
         for sp in range(len(self.subPops)):
             self.subPops[sp].fitness[i] = fitness
-            if fitness > self.subPopBestFitness[sp]:
+            if fitness >= self.subPopBestFitness[sp]:
                 self.subPopBestFitness[sp] = fitness
                 self.subPopBestIndiv[sp] = np.copy(self.subPops[sp].individuals[i])
                 if fitness > self.bestCurrFitness: self.bestCurrFitness = fitness
@@ -175,15 +175,15 @@ class GSP:
         self.replace()
         self.mutate()
 
-        if self.bestCurrFitness <= self.bestFitnessSoFar:
+        if self.bestCurrFitness < self.bestFitnessSoFar:
             self.gensWithoutImprovement += 1
             if self.gensWithoutImprovement == self.burstStagThreshold:
-                self.burstsWithoutImprovement += 1
                 if self.burstsWithoutImprovement == self.burstsBeforeRecruit:
                     self.newRecruit()
                     self.burstsWithoutImprovement = 0
                 else:
                     self.burstMutate()
+                    self.burstsWithoutImprovement += 1
                 self.gensWithoutImprovement = 0
         else:
             self.bestFitnessSoFar = self.bestCurrFitness
