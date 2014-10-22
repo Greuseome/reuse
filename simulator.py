@@ -1,17 +1,19 @@
-import time
+import time, os
 import subprocess
 import numpy as np
 
 class Simulator(object):
-    object_size = 80
     delimiter = ':'
+    max_num_frames = 50000 # ~14 mins game play time
 
     def __init__(self, game):
         self.game = game
         game_str = './run_ale.sh \
                     -game_controller fifo \
+                    -max_num_frames {} \
                     /u/mhollen/sift/ale/roms/{}.bin' \
-                    .format(game)
+                    .format(self.max_num_frames, self.game)
+
         self.proc = subprocess.Popen(game_str.split(),
                                 stdout = subprocess.PIPE,
                                 stdin  = subprocess.PIPE)
@@ -40,11 +42,12 @@ class Simulator(object):
         """
         line = self.proc.stdout.readline()
         # just keep reading until we get something worthwhile
+        wait_count = 0
         while self.delimiter not in line:
-            print '*'*40
-            print line
-            print '*'*40
             line = self.proc.stdout.readline()
+            wait_count += 1
+            if wait_count > 1000:
+                raise Exception("Exceeded maximum wait for proper ALE output")
 
         # we should be getting objects and reward from ALE
         objects, episode = line.split(self.delimiter)[:2]
@@ -55,23 +58,41 @@ class Simulator(object):
         self.objects = np.array([int(n) for n in objects], \
                                 dtype=np.bool)
 
+        if self.terminated:
+            self.proc.kill()
+
 
     def running(self):
         """ use this for polling stdin """
         return self.proc.poll() is None and not self.terminated
 
-    def kill(self):
-        self.proc.kill()
 
-"""
-sim = Simulator('freeway')
+class SimulatorJob(object):
 
-while sim.running():
-    l = sim.read()
-    print l
-    sim.write('2,18\n')
+    def __init__(self, index, game, netfile, resultfile):
+        self.index = index
+        self.game = game
+        self.netfile = netfile
+        self.resultfile = resultfile
 
-sim.read()
-sim.wait()
-"""
+        self.game_str = './condor_submit_sim.sh {} {} {}' \
+                         .format(game, netfile, resultfile)
+
+        print self.game_str
+
+        self.proc = subprocess.Popen(self.game_str.split())
+
+        self.proc.wait()
+        if bool(self.proc.returncode):
+            raise Exception('Error submitting job. {}'.format(self.game_str))
+
+    def done(self):
+        return os.path.exists(self.resultfile)
+
+    def reward(self):
+        f = open(self.resultfile, 'r')
+        rew = int(f.readline())
+        f.close()
+
+        return rew
 

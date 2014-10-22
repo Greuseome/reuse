@@ -1,8 +1,13 @@
+#!/bin/bash
 
 JOBFILE=$(mktemp)
 GAME=$1
 NETWORK=$2
 RESULT=$3
+
+if [[ $# -lt 3 ]]; then
+    echo "usage: $(basename $0) <game> <network-file> <results-file>"
+fi
 
 cat > $JOBFILE <<EOL
 ######################################### 
@@ -22,9 +27,9 @@ Executable = /usr/local/bin/python
 Arguments = /u/mhollen/sift/reuse/simulator_job.py $GAME $NETWORK $RESULT
 Requirements = InMastodon && Arch == "x86_64"
 
-Error = condor_test.err.\$(Process) 
-Output = condor_test.out.\$(Process) 
-Log = condor_test.log
+Error = $RESULT.err
+Output = $RESULT.out
+Log = $RESULT.log
 
 Queue
 EOL

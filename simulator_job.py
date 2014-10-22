@@ -1,11 +1,11 @@
 from simulator import Simulator
-import pickle
+import cPickle
 import sys
 import numpy as np
 
 def run_game(game, net, result_file):
+    currnet = cPickle.load(open(net,'r'))
     sim = Simulator(game)
-    currnet = pickle.load(open(net,'r'))
     fitness = 0
 
     while sim.running():
@@ -17,13 +17,11 @@ def run_game(game, net, result_file):
         currnet.activate()
         output = currnet.readOutputs()
 
-        f = open(result_file, 'a')
-        f.write('reward: {}\n'.format(sim.reward))
-        f.close()
-
         sim.write('{},18\n'.format(np.argmax(output)))
 
-    sim.kill()
+    f = open(result_file, 'w')
+    f.write('{}'.format(sim.reward))
+    f.close()
 
 if __name__ == '__main__':
     if len(sys.argv) > 2:
