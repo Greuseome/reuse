@@ -6,6 +6,8 @@ from uuid import uuid1
 
 from simulator import SimulatorJob
 
+printf = sys.stdout.write
+
 def find_num_objects(game):
     images_dir = os.path.join('/u/mhollen/sift/ale-assets/images', game)
     return len(os.listdir(images_dir))
@@ -39,6 +41,7 @@ def evolve_atari_network(game, input_size):
 
         # test each subpopulation (run each on condor)
         all_sims = []
+        print "submitting jobs..."
         for i in range(ne.populationSize):
             currnet_base = os.path.join(generation_dir, '.net-%04d' % i)
             currnet_result = '{}.result'.format(currnet_base)
@@ -52,12 +55,14 @@ def evolve_atari_network(game, input_size):
             sim = SimulatorJob(i, game, currnet_netfile, currnet_result)
             all_sims.append(sim)
 
+        print "waiting to finish..."
         # wait for all sims to finish
         finished = False
         while not finished:
             finished = np.all([s.done() for s in all_sims])
             time.sleep(.2)
 
+        print "analyzing..."
         for sim in all_sims:
             fitness = sim.reward
 
@@ -82,9 +87,10 @@ def evolve_atari_network(game, input_size):
         with open(os.path.join(game_dir, 'fitness.history'),'a') as curve:
             curve.write(str(curr_best_fitness)+',') 
 
-        print "Gen " + str(generation) + ", Best: " + str(curr_best_fitness) 
+        print "+ gen: {}, best: {}".format(generation, curr_best_fitness)
 
         # evolve
+        print "evolving..."
         ne.nextGen()
 
     print "Generation "+str(generation)+", task complete."

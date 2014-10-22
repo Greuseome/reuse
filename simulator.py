@@ -79,9 +79,10 @@ class SimulatorJob(object):
         self.game_str = './condor_submit_sim.sh {} {} {}' \
                          .format(game, netfile, resultfile)
 
-        print self.game_str
-
-        self.proc = subprocess.Popen(self.game_str.split())
+        DEVNULL = open(os.devnull, 'wb')
+        self.proc = subprocess.Popen(self.game_str.split(),
+                                     stdin = DEVNULL,
+                                     stdout= DEVNULL)
 
         self.proc.wait()
         if bool(self.proc.returncode):
