@@ -22,7 +22,7 @@ class GSP:
     burstStdev = 1
     burstsBeforeRecruit = 1
 
-    def __init__(self,numInput,numOutput,numInitialRecruits=5,reusables=[],atari=True):
+    def __init__(self,numInput,numOutput,numInitialRecruits=2,reusables=[],atari=True):
         self.atari = atari
         self.numInput = numInput
         if atari:
@@ -34,8 +34,8 @@ class GSP:
         self.reusables = copy.deepcopy(reusables)
         self.numReused = 0
         self.bestNetSoFar = None
-        self.bestFitnessSoFar = -1
-        self.bestCurrFitness = -1
+        self.bestFitnessSoFar = -1000000
+        self.bestCurrFitness = -1000000
         self.gensWithoutImprovement = 0
         self.burstsWithoutImprovement = 0
         self.subPops = [] # make this an np array instead of list of pntrs?
@@ -66,7 +66,7 @@ class GSP:
             if SELF_LOOPS: genomeSize += 1 # second gene self loop weight
         self.subPops.append(Subpopulation.Subpopulation(genomeSize,self.populationSize))
         self.subPopBestIndiv.append(None)
-        self.subPopBestFitness.append(-1)
+        self.subPopBestFitness.append(-1000000)
 
     def testNet(self,i):
         # set up the ith net for evaluation
