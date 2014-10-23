@@ -89,7 +89,8 @@ class SimulatorJob(object):
             raise Exception('Error submitting job. {}'.format(self.game_str))
 
     def done(self):
-        if os.path.exists(self.resultfile):
+        # check that path exists and that one line has been written
+        if os.path.exists(self.resultfile) and os.stat(self.resultfile).st_size > 0:
             self.update_reward()
             return True
         return False
