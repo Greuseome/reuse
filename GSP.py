@@ -160,6 +160,7 @@ class GSP:
                 j += 1                
 
     def burstMutate(self):
+        print 'BURSTING'
         for sp in range(len(self.subPops)):
             self.subPops[sp].individuals = (self.burstStdev
                 * np.random.randn(self.populationSize,self.subPops[sp].genomeSize)
@@ -175,7 +176,7 @@ class GSP:
         self.replace()
         self.mutate()
 
-        if self.bestCurrFitness < self.bestFitnessSoFar:
+        if self.bestCurrFitness <= self.bestFitnessSoFar:
             self.gensWithoutImprovement += 1
             if self.gensWithoutImprovement == self.burstStagThreshold:
                 if self.burstsWithoutImprovement == self.burstsBeforeRecruit:
