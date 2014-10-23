@@ -127,7 +127,7 @@ class ReuseNetwork:
         self.edgeCharges.fill(0)
 
     def save(self, path):
-        cPickle.dump(self, open(path,'wb'))
+        cPickle.dump(self, open(path,'wb'),2)
         
 
 if __name__=='__main__':
