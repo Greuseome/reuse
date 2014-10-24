@@ -17,7 +17,7 @@ class GSP:
 
     # GA parameters
     populationSize = 100
-    mutationStdev = 0.5
+    mutationStdev = 1
     burstStagThreshold = 5
     burstStdev = 1
     burstsBeforeRecruit = 1
@@ -134,8 +134,7 @@ class GSP:
     
     def mutate(self):
         for subPop in self.subPops:
-            subPop.individuals += self.mutationStdev*np.random.randn(self.populationSize,
-                                                                        subPop.genomeSize)
+            subPop.individuals[:self.populationSize/2] += self.mutationStdev*np.random.randn(self.populationSize/2,subPop.genomeSize)
 
 
     def replace(self):
@@ -188,6 +187,7 @@ class GSP:
                 self.gensWithoutImprovement = 0
         else:
             self.bestFitnessSoFar = self.bestCurrFitness
+            print 'New Best'
             self.gensWithoutImprovement = 0
             self.burstsWithoutImprovement = 0
         
