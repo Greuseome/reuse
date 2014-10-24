@@ -7,8 +7,6 @@ from uuid import uuid1
 
 from simulator import SimulatorJob
 
-printf = sys.stdout.write
-
 def find_num_objects(game):
     images_dir = os.path.join('/u/mhollen/sift/ale-assets/images', game)
     return len(os.listdir(images_dir))
@@ -85,7 +83,7 @@ def evolve_atari_network(game, input_size, reusables):
                 os.remove(sim.netfile)
 
         # delete generation info
-        shutil.rmtree(generation_dir)
+        shutil.rmtree(generation_dir, ignore_errors=True)
 
         # write current best fitness to file
         with open(os.path.join(game_dir, 'fitness.history'),'a') as curve:
