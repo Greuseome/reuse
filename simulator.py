@@ -83,12 +83,6 @@ class Simulator(object):
         # we should be getting objects and reward from ALE
         objects, episode = line.split(self.delimiter)[:2]
         # convert reward to array
-<<<<<<< Updated upstream
-        self.terminated =  bool(int(episode.split(',')[0]))
-        self.reward     =  int(episode.split(',')[1])
-        # convert objects to array
-        self.objects = np.array([float(n) for n in objects],dtype=np.float)
-=======
         t, r = episode.split(',')
         if r != '' and t != '':
             self.terminated =  bool(int(t))
@@ -100,7 +94,6 @@ class Simulator(object):
                 self.noreward_i += self.skip_num_frames
             else:
                 self.noreward_i = 0
->>>>>>> Stashed changes
 
         if self.terminated:
             self.proc.kill()
