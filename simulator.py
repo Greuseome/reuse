@@ -9,11 +9,12 @@ class Simulator(object):
 
     def __init__(self,
                  game,
+                 numInput,
                  skip_num_frames=20,
                  noreward_stop=60):
 
         self.game = game
-        self.objects = np.empty(0, dtype=bool)
+        self.objects = np.empty(numInput,dtype=float)
         self.terminated = False
         self.reward = 0
         self.noreward_i = 0
@@ -64,7 +65,7 @@ class Simulator(object):
         else:
             self.terminated = False
             self.reward = 0
-            self.objects = None
+            #self.objects = None
 
         # just keep reading until we get something worthwhile
         wait_count = 0
@@ -88,8 +89,7 @@ class Simulator(object):
             self.terminated =  bool(int(t))
             self.reward     =  int(r)
             # convert objects to array
-            self.objects = np.array([float(n) for n in objects], \
-                                    dtype=np.float)
+            self.objects[:] = [float(x) for x in objects]
             if self.reward == 0:
                 self.noreward_i += self.skip_num_frames
             else:

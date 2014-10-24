@@ -7,7 +7,7 @@ import shutil
 
 def run_game(game, net, result_file):
     currnet = cPickle.load(open(net,'r'))
-    sim = Simulator(game)
+    sim = Simulator(game,currnet.numInput)
     fitness = 0
     i = 0
 
