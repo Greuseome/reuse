@@ -130,7 +130,7 @@ class GSP:
             if fitness >= self.subPopBestFitness[sp]:
                 self.subPopBestFitness[sp] = fitness
                 self.subPopBestIndiv[sp] = np.copy(self.subPops[sp].individuals[i])
-                if fitness > self.bestCurrFitness: self.bestCurrFitness = fitness
+            if fitness > self.bestCurrFitness: self.bestCurrFitness = fitness
     
     def mutate(self):
         for subPop in self.subPops:
@@ -189,7 +189,9 @@ class GSP:
         else:
             self.bestFitnessSoFar = self.bestCurrFitness
             self.gensWithoutImprovement = 0
-
+            self.burstsWithoutImprovement = 0
+        
+        self.bestCurrFitness = -1000000
         for subPop in self.subPops: np.random.shuffle(subPop.individuals)
 
 

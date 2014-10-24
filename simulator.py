@@ -55,8 +55,7 @@ class Simulator(object):
         self.terminated =  bool(int(episode.split(',')[0]))
         self.reward     =  int(episode.split(',')[1])
         # convert objects to array
-        self.objects = np.array([float(n) for n in objects], \
-                                dtype=np.float)
+        self.objects = np.array([float(n) for n in objects],dtype=np.float)
 
         if self.terminated:
             self.proc.kill()
