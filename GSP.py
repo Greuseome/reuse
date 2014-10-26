@@ -18,7 +18,7 @@ class GSP:
     # GA parameters
     populationSize = 100
     mutationStdev = 1
-    burstStagThreshold = 5
+    burstStagThreshold = 10
     burstStdev = 1
     burstsBeforeRecruit = 1
 
@@ -180,7 +180,6 @@ class GSP:
             if self.gensWithoutImprovement == self.burstStagThreshold:
                 if self.burstsWithoutImprovement == self.burstsBeforeRecruit:
                     self.newRecruit()
-                    self.burstsWithoutImprovement = 0
                 else:
                     self.burstMutate()
                     self.burstsWithoutImprovement += 1
