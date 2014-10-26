@@ -50,7 +50,7 @@ def visualize(net):
         l = layer[x]
         nodes_in_layer[l] += 1
         #pos[x] = (nodes_in_layer[l]/(float(layer_size[l])+1),l)
-        pos[x] = (nodes_in_layer[l]/float(max(layer_size)),l)
+        pos[x] = ((nodes_in_layer[l]/float(max(layer_size)))*(0.7*(len(layer)-l)),l)
     
     # add edges
     for x in range(net.numNodes):

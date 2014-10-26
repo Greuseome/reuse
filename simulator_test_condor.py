@@ -1,5 +1,6 @@
 import sys, os, time
 import shutil
+import ConfigParser
 import GSP as NE
 import numpy as np
 import cPickle
@@ -12,19 +13,36 @@ def find_num_objects(game):
     return len(os.listdir(images_dir))
 
 
-def evolve_atari_network(game, input_size, reusables):
+def evolve_atari_network(settings_file):
+    # read settings file
+    config = ConfigParser.ConfigParser()
+    config.read(settings_file)
     
-    if len(reusables) > 0: numInitialRecruits = 1
-    else: numInitialRecruits = 2
+    # load settings
+    game = config.get('task','game')
+    input_size = find_num_objects(game)
 
-    ne = NE.GSP(input_size, 18, numInitialRecruits, reusables, True)
+    num_generations = config.getint('evolution','num_generations')
 
-    NUM_GENERATIONS = 1000
+    compressed_output = config.getboolean('topology','compressed_output')
+    if compressed_output:
+        output_size = 10
+    else: output_size = 18
+
+    # load reuse nets
+    reusables = []
+    for r in config.get('task','source_networks').split(','):
+        reusables.append(cPickle.load(r,'rb'))
+
+    # init evolution
+    ne = NE.GSP(input_size, output_size, reusables, config)
+
 
     evolve_id = str(uuid1())
     game_dir = os.path.join(os.getcwdu(), 'results', game, evolve_id)
     if not os.path.exists(game_dir):
         os.makedirs(game_dir)
+    shutil.copy(settings_file,os.path.join(game_dir,settings_file))
 
     print '*'*40
     print "All files will be saved to:"
@@ -32,9 +50,8 @@ def evolve_atari_network(game, input_size, reusables):
     print '*'*40
 
     best_fitness = -10000000
-    generation = 0
 
-    for generation in range(NUM_GENERATIONS):
+    for generation in range(num_generations):
         curr_best_fitness = -10000000
 
         generation_dir = os.path.join(game_dir, 'gen-%04d' % generation)
@@ -54,14 +71,18 @@ def evolve_atari_network(game, input_size, reusables):
             currnet.save(currnet_netfile)
 
             # run simulator on network
-            sim = SimulatorJob(i, game, currnet_netfile, currnet_result)
+            sim = SimulatorJob(i, game, currnet_netfile, currnet_result, config)
             all_sims.append(sim)
 
         print "waiting to finish..."
         # wait for all sims to finish
+        sims_finished = [False]*ne.populationSize 
         finished = False
         while not finished:
-            finished = np.all([s.done() for s in all_sims])
+            for i in range(len(sims_finished)):
+                if not sims_finished[i]:
+                    sims_finished[i] = all_sims[i].done()
+            finished = all(sims_finished)
             time.sleep(.2)
 
         print "analyzing..."
@@ -104,11 +125,7 @@ def evolve_atari_network(game, input_size, reusables):
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
-        game = sys.argv[1]
-    else: raise Exception("No game specified")
-    reusables = []
-    for reuseNet in sys.argv[2:]:
-        reusables.append(cPickle.load(open(reuseNet,'r')))
-    evolve_atari_network(game, find_num_objects(game), reusables)
+        evolve_atari_network(sys.argv[1])
+    else: raise Exception("usage: python simulator_test_condor.py [settings_file] ")
 
 

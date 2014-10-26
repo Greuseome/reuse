@@ -4,23 +4,24 @@ import numpy as np
 
 class Simulator(object):
     delimiter = ':'
-    max_num_frames = 50000 # ~14 mins game play time
     fps = 60
 
     def __init__(self,
                  game,
                  numInput,
-                 skip_num_frames=20,
-                 noreward_stop=60):
+                 skip_num_frames,
+                 max_num_frames
+                 noreward_stop):
 
         self.game = game
         self.objects = np.empty(numInput,dtype=float)
+        self.skip_num_frames = skip_num_frames
+        self.max_num_frames = max_num_frames
+        self.noreward_stop = noreward_stop
+
         self.terminated = False
         self.reward = 0
         self.noreward_i = 0
-        self.skip_num_frames = skip_num_frames
-
-        self.noreward_stop = noreward_stop
 
         game_str = './run_ale.sh \
                     -game_controller fifo \
@@ -90,7 +91,7 @@ class Simulator(object):
             self.reward     =  int(r)
             # convert objects to array
             self.objects[:] = [float(x) for x in objects]
-            if self.reward == 0:
+            if self.reward <= 0:
                 self.noreward_i += self.skip_num_frames
             else:
                 self.noreward_i = 0
@@ -114,15 +115,25 @@ class Simulator(object):
 
 class SimulatorJob(object):
 
-    def __init__(self, index, game, netfile, resultfile):
+    def __init__(self, index, game, netfile, resultfile, config):
         self.index = index
         self.game = game
         self.netfile = netfile
         self.resultfile = resultfile
         self.reward = None
 
-        self.game_str = './condor_submit_sim.sh {} {} {}' \
-                         .format(game, netfile, resultfile)
+        # load ale params
+        skip_num_frames = config.getint('ale','skip_num_frames')
+        noreward_stop = config.getint('ale','max_secs_without_reward')
+        max_num_frames = config.getint('ale','max_num_frames')
+
+        self.game_str = './condor_submit_sim.sh {} {} {} {} {} {}' \
+                         .format(game, 
+                                 netfile, 
+                                 resultfile,
+                                 skip_num_frames,
+                                 max_num_frames,
+                                 noreward_stop)
 
         DEVNULL = open(os.devnull, 'wb')
         self.proc = subprocess.Popen(self.game_str.split(),

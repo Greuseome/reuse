@@ -4,11 +4,11 @@ import numpy as np
 import cPickle
 
 def sigmoid(x,b):
-    return (np.tanh(2*(x-b))+1)/2.0
+    return (np.tanh(2*(x-b)) + 1)/2
 
 class ReuseNetwork:
 
-    def __init__(self, numInput, numOutput):
+    def __init__(self, numInput, numOutput, config):
         self.numInput = numInput
         self.numOutput = numOutput
         self.numReuse = 0
@@ -26,7 +26,12 @@ class ReuseNetwork:
         self.reuseStart = self.numInput
         self.hiddenStart = self.numInput
         self.outputStart = self.numInput
-    
+        
+        # types of transfer connections
+        self.input2input = config.getboolean('topology','reuse_input_to_input')
+        self.input2hidden = config.getboolean('topology','reuse_input_to_hidden')
+       
+
     def addHidden(self, bias=0.5):
         self.addNodes(1,self.outputStart)
         self.nodeBias.insert(self.outputStart,bias)
@@ -89,12 +94,15 @@ class ReuseNetwork:
 
         for x in range(self.reuseStart,self.numNodes):
             if r < len(self.reuseInfo): # activate reuse net
-                if x < startHidden: # reuse input
+                if self.input2input and x < startHidden: # reuse input
                     # connections come from currnet input
                     inCharges = np.sum(self.edgeCharges[:self.reuseStart,x])
                 elif x < startOutput: # reuse reuse or hidden
-                    # connections come from reused input
-                    inCharges = np.sum(self.edgeCharges[startIdx:startHidden,x])
+                    inCharges = 0 
+                    if self.input2input: # connections come from reused input
+                        inCharges += np.sum(self.edgeCharges[startIdx:startHidden,x])
+                    if self.input2hidden: # connections come from currnet input
+                        inCharges += np.sum(self.edgeCharges[:self.reuseStart,x])
                     inCharges += self.edgeCharges[x,x] # self loops
                 elif x < endIdx: # reuse output
                     # connections come from reused hidden

@@ -10,27 +10,36 @@ SUBSTRATE_WIDTH = 8
 SUBSTRATE_HEIGHT = 10
 SUBSTRATE_SIZE = SUBSTRATE_WIDTH*SUBSTRATE_HEIGHT
 
-# Self loops on hidden nodes?
-SELF_LOOPS = True
-
 class GSP:
 
-    # GA parameters
-    populationSize = 100
-    mutationStdev = 1
-    burstStagThreshold = 10
-    burstStdev = 1
-    burstsBeforeRecruit = 1
+    def __init__(self,numInput,numOutput,reusables,config):
 
-    def __init__(self,numInput,numOutput,numInitialRecruits=2,reusables=[],atari=True):
-        self.atari = atari
+        # load GA params
+        self.populationSize = config.getint('evolution','population_size')
+        self.mutationStdev = config.getfloat('evolution','mutation_stdev')
+        self.burstStagThreshold = config.getint('evolution','stag_threshold') 
+        self.burstStdev = self.mutationStdev # keep these equal for now
+        self.burstsBeforeRecruit = 1 # keep this constant for now
+
+        if len(reusables) > 0: numInitialRecruits = 1
+        else: numInitialRecruits = config.getint('evolution','num_initial_recruits')
+
+        # load reuse topology settings
+        self.input2input = config.getboolean('topology','reuse_input_to_input')
+        self.input2hidden = config.getboolean('topology','reuse_input_to_hidden')
+        
+        # self loops on hidden nodes?
+        self.loops = config.getboolean('topology','hidden_self_loops')
+
+        # initialize attr
+        self.atari = config.getboolean('task','atari')
         self.numInput = numInput
-        if atari:
+        if self.atari:
             self.numSubstrates = numInput
             self.numInput *= SUBSTRATE_SIZE
             self.reuseNumSubstrates = []
         self.numOutput = numOutput
-        self.currnet = ReuseNetwork.ReuseNetwork(self.numInput,self.numOutput)
+        self.currnet = ReuseNetwork.ReuseNetwork(self.numInput,self.numOutput,config)
         self.reusables = copy.deepcopy(reusables)
         self.numReused = 0
         self.bestNetSoFar = None
@@ -41,29 +50,41 @@ class GSP:
         self.subPops = [] # make this an np array instead of list of pntrs?
         self.subPopBestIndiv = []
         self.subPopBestFitness = []
+
         for i in range(numInitialRecruits): self.newRecruit()
 
     def newRecruit(self):
+        # add reuse or hidden
         if len(self.reusables) > 0:
             print "New Reuse"
             recruit = self.reusables.pop()
             self.currnet.addReuse(recruit)
             self.numReused += 1
 
-            if self.atari:
-                self.reuseNumSubstrates.append(recruit.numInput / SUBSTRATE_SIZE)
-                numInputWeights = self.numSubstrates * self.reuseNumSubstrates[-1]
-            else:
-                numInputWeights = self.numInput*recruit.numInput
-
-            numOutputWeights = self.numOutput*recruit.numOutput
-            genomeSize = numInputWeights+numOutputWeights
+            genomeSize = 0
+            
+            # add input2input weights
+            if self.input2input:
+                if self.atari:
+                    self.reuseNumSubstrates.append(recruit.numInput / SUBSTRATE_SIZE)
+                    genomeSize += self.numSubstrates * self.reuseNumSubstrates[-1]
+                else:
+                    genomeSize += self.numInput*recruit.numInput
+            
+            # add input2hidden weights
+            if self.input2hidden:
+                genomeSize += self.numInput * recruit.numHidden
+            
+            # add output2output weights
+            genomeSize += self.numOutput*recruit.numOutput
 
         else:
             print "New Hidden"
             self.currnet.addHidden()
             genomeSize = 1 + self.numInput + self.numOutput # first gene node bias
-            if SELF_LOOPS: genomeSize += 1 # second gene self loop weight
+            if self.loops: genomeSize += 1 # second gene self loop weight
+        
+        # set up subpopulation for this recruit
         self.subPops.append(Subpopulation.Subpopulation(genomeSize,self.populationSize))
         self.subPopBestIndiv.append(None)
         self.subPopBestFitness.append(-1000000)
@@ -75,21 +96,33 @@ class GSP:
         for sp in range(self.numReused):
             genome = self.subPops[sp].individuals[i]
             currGene = 0
-            # set input-to-input weights
             startIdx = self.currnet.reuseInfo[sp][0]
-            if self.atari:
-                for j in range(self.numSubstrates):
-                    for k in range(self.reuseNumSubstrates[sp]):
-                        self.currnet.edgeWeights[j*SUBSTRATE_SIZE:j*SUBSTRATE_SIZE+SUBSTRATE_SIZE,
-                            startIdx+k*SUBSTRATE_SIZE:startIdx+k*SUBSTRATE_SIZE+SUBSTRATE_SIZE].fill(
-                            genome[currGene])
-                        currGene += 1
-            else:
-                numReuseInputs = self.currnet.reuseInfo[sp][2]
-                numConnections = numReuseInputs * self.numInput
-                self.currnet.edgeWeights[:self.currnet.reuseStart,
-                    startIdx:startIdx+numReuseInputs] = (
-                    genome[currGene:currGene+numConnections].reshape(self.numInput,numReuseInputs))
+
+            if self.input2input:
+                # set input-to-input weights
+                if self.atari:
+                    for j in range(self.numSubstrates):
+                        for k in range(self.reuseNumSubstrates[sp]):
+                            self.currnet.edgeWeights[j*SUBSTRATE_SIZE:j*SUBSTRATE_SIZE+SUBSTRATE_SIZE,
+                                startIdx+k*SUBSTRATE_SIZE:startIdx+k*SUBSTRATE_SIZE+SUBSTRATE_SIZE].fill(
+                                genome[currGene])
+                            currGene += 1
+                else:
+                    numReuseInputs = self.currnet.reuseInfo[sp][2]
+                    numConnections = numReuseInputs * self.numInput
+                    self.currnet.edgeWeights[:self.currnet.reuseStart,
+                        startIdx:startIdx+numReuseInputs] = (
+                        genome[currGene:currGene+numConnections].reshape(self.numInput,numReuseInputs))
+                    currGene += numConnections
+            
+            if self.input2hidden:
+                # set input-to-hidden weights
+                reuseHiddenStart = startIdx + self.currnet.reuseInfo[sp][3]
+                reuseOutputStart = startIdx + self.currnet.reuseInfo[sp][4]
+                reuseNumHidden = reuseOutputStart - reuseHiddenStart
+                numConnections = self.numInput * reuseNumHidden
+                self.currnet.edgeWeights[:self.currnet.reuseStart,reuseHiddenStart:reuseOutputStart] = (
+                    genome[currGene:currGene+numConnections].reshape(self.numInput,reuseNumHidden))
                 currGene += numConnections
 
             # set output-to-output weights
@@ -107,7 +140,7 @@ class GSP:
             idx = self.currnet.hiddenStart+sp
             self.currnet.nodeBias[idx] = genome[0] 
             currGene = 1 # skip node bias
-            if SELF_LOOPS:
+            if self.loops:
                 self.currnet.edgeWeights[idx,idx] = genome[1]
                 currGene += 1 # skip self loop weight
             # set input weights
@@ -121,6 +154,7 @@ class GSP:
             currGene += self.numOutput
             if currGene != len(genome): raise Exception('Bad genome application')
 
+        self.currnet.clearCharges()
         return self.currnet
 
     def evaluate(self,fitness,i):

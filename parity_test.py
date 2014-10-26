@@ -9,10 +9,20 @@ import numpy as np
 import copy
 import NetViz
 import time
+import sys
+import ConfigParser
 
-TEST_REUSE = True # switch to test with or without reuse
+# load settings file
+config = ConfigParser.ConfigParser()
+config.read(sys.argv[1])
+
+# switch to test with or without reuse
+TEST_REUSE = True 
+
 INPUT_SIZE = 4
-ATARI = False # use Atari substrates or just single input
+
+# use Atari substrates or just single input
+ATARI = config.getboolean('task','atari')
 SUBSTRATE_WIDTH = 8
 SUBSTRATE_HEIGHT = 10
 
@@ -35,7 +45,7 @@ while k <= INPUT_SIZE:
         data = temp
         n -= 1
 
-    ne = GSP.GSP(k,1,1,reusables,ATARI)
+    ne = GSP.GSP(k,1,reusables,config)
 
     best_fitness = -1
     best_net = None
@@ -49,7 +59,6 @@ while k <= INPUT_SIZE:
             currnet = ne.testNet(i)
             fitness = 0
             for d in data:
-                #currnet.clearCharges()
                 inputs = []
                 if ATARI:
                     for i in d[0]:
@@ -77,6 +86,7 @@ while k <= INPUT_SIZE:
     
     print "Generation "+str(generation)+", task complete."
     NetViz.visualize(best_net)
+    best_net.clearCharges()
     reusables.append(best_net)
     k += 1
 

@@ -5,9 +5,15 @@ import numpy as np
 import tempfile
 import shutil
 
-def run_game(game, net, result_file):
+def run_game(game,
+             net,
+             result_file, 
+             skip_num_frames,
+             max_num_frames,
+             max_secs_without_reward):
+
     currnet = cPickle.load(open(net,'r'))
-    sim = Simulator(game,currnet.numInput)
+    sim = Simulator(game,currnet.numInput,skip_num_frames,max_num_frames,max_secs_without_reward)
     fitness = 0
     i = 0
 
@@ -18,12 +24,21 @@ def run_game(game, net, result_file):
 
         fitness += sim.reward
 
-        currnet.clearCharges()
         currnet.setInputs(sim.objects)
         currnet.activate()
         output = currnet.readOutputs()
-
-        sim.write('{},18\n'.format(np.argmax(output)))
+        if len(output) == 18:
+            action = np.argmax(output)
+        else:
+            # compressed repr: output0 is fire; output1-9 are dirs
+            # relies on output functions with range centered around 0, e.g., [-1,1]
+            action = np.argmax(output[1:]) + 1
+            if action != 1:
+                if output[0] >= 0: action += 8 # add 8 if (fire) and (dir not noop)
+            else: 
+                if output[0] < 0: action -= 1 # substract 1 if (not fire) and (dir noop)
+            
+        sim.write('{},18\n'.format(action))
         i += 1
 
     tmp = tempfile.mktemp()
@@ -38,6 +53,9 @@ if __name__ == '__main__':
         game = sys.argv[1]
         net  = sys.argv[2]
         result_file = sys.argv[3]
-        run_game(game, net, result_file)
+        skip_num_frames = sys.argv[4]
+        max_num_frames = sys.argv[5]
+        max_secs_without_reward = sys.argv[6]
+        run_game(game, net, result_file, skip_num_frames, max_num_frames, max_secs_without_reward)
     else:
         raise Exception("usage: simulator_job.py game /path/to/pickled/net /path/to/result/file")
