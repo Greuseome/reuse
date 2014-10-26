@@ -34,7 +34,7 @@ def evolve_atari_network(settings_file):
     reuseFiles = config.get('task','source_networks')
     if len(reuseFiles) > 0:
         for r in reuseFiles.split(','):
-            reusables.append(cPickle.load(r))
+            reusables.append(cPickle.load(open(r,'r')))
 
     # init evolution
     ne = NE.GSP(input_size, output_size, reusables, config)
