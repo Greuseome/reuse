@@ -89,6 +89,10 @@ def evolve_atari_network(game, input_size, reusables):
         with open(os.path.join(game_dir, 'fitness.history'),'a') as curve:
             curve.write(str(curr_best_fitness)+',') 
 
+        # save neuroevolution progress       
+        with open(os.path.join(game_dir,'ne.pkl'),'wb') as world_state:
+            cPickle.dump(ne,world_state,2)
+
         print "+ gen: {}, best: {}".format(generation, curr_best_fitness)
 
         # evolve
