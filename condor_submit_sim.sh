@@ -23,7 +23,7 @@ cat > $JOBFILE <<EOL
 +Group = "GRAD" 
 +Project = "AI_ROBOTICS"
 
-+ProjectDescription = "ALE Simulator Job"
++ProjectDescription = "Transfer learning in ALE"
 
 Universe = vanilla
 Executable = /usr/local/bin/python

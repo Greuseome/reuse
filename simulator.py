@@ -126,8 +126,10 @@ class SimulatorJob(object):
         skip_num_frames = config.getint('ale','skip_num_frames')
         noreward_stop = config.getint('ale','max_secs_without_reward')
         max_num_frames = config.getint('ale','max_num_frames')
-
-        self.game_str = './condor_submit_sim.sh {} {} {} {} {} {}' \
+        
+        job_successful = False
+        while not job_successful:
+            self.game_str = './condor_submit_sim.sh {} {} {} {} {} {}' \
                          .format(game, 
                                  netfile, 
                                  resultfile,
@@ -135,14 +137,20 @@ class SimulatorJob(object):
                                  max_num_frames,
                                  noreward_stop)
 
-        DEVNULL = open(os.devnull, 'wb')
-        self.proc = subprocess.Popen(self.game_str.split(),
+            DEVNULL = open(os.devnull, 'wb')
+            self.proc = subprocess.Popen(self.game_str.split(),
                                      stdin = DEVNULL,
                                      stdout= DEVNULL)
 
-        self.proc.wait()
-        if bool(self.proc.returncode):
-            raise Exception('Error submitting job. {}'.format(self.game_str))
+            self.proc.wait()
+            #job_successful = True
+            #if bool(self.proc.returncode):
+            #    raise Exception('Error submitting job. {}'.format(self.game_str))
+                
+            if bool(self.proc.returncode):
+                print 'Error submitting job: retrying...'
+            else: job_successful = True
+            
 
     def done(self):
         # check that path exists and that one line has been written

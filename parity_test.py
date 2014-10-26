@@ -67,7 +67,7 @@ while k <= INPUT_SIZE:
                 currnet.setInputs(np.array(inputs))
                 currnet.activate()
                 o = currnet.readOutputs()
-                fitness += 1 - abs(d[1] - o[0])
+                fitness += 1 - abs(d[1] - (o[0]+1)/2)
             ne.evaluate(fitness,i)
 
             if fitness > curr_best_fitness:

@@ -18,6 +18,8 @@ class GSP:
         self.populationSize = config.getint('evolution','population_size')
         self.mutationStdev = config.getfloat('evolution','mutation_stdev')
         self.burstStagThreshold = config.getint('evolution','stag_threshold') 
+        self.replacementRate = config.getfloat('evolution','replacement_rate')
+        self.randomReplaceRate = self.replacementRate*0.01 - 0.5
         self.burstStdev = self.mutationStdev # keep these equal for now
         self.burstsBeforeRecruit = 1 # keep this constant for now
 
@@ -179,23 +181,30 @@ class GSP:
             subPop.fitness = subPop.fitness[p]
             
             j = 0 # current indiv to be replaced
+            
+            # crossover replacements
             for i in range(int(0.75*self.populationSize),self.populationSize):
-                # crossover
                 g1 = subPop.individuals[i]
                 idx = np.random.randint(i,self.populationSize)
                 g2 = subPop.individuals[idx]
+                if len(g1) != len(g2): raise Exception ('BADDD!!!!')
                 point = np.random.randint(0,len(g1)-1)
-                subPop.individuals[j][:point] = g1[:point] 
-                subPop.individuals[j][point:] = g2[point:]
+                subPop.individuals[j,:point] = g1[:point] 
+                subPop.individuals[j,point:] = g2[point:]
                 j += 1
-                subPop.individuals[j][:point] = g2[:point] 
-                subPop.individuals[j][point:] = g1[point:]
-                j += 1                
+                subPop.individuals[j,:point] = g2[:point] 
+                subPop.individuals[j,point:] = g1[point:]
+                j += 1
+
+            # random replacements
+            numRandom = int(self.randomReplaceRate*self.populationSize)
+            subPop.individuals[j:j+numRandom] = np.random.randn(
+                                      numRandom,subPop.genomeSize)
 
     def burstMutate(self):
         print 'BURSTING'
         for sp in range(len(self.subPops)):
-            self.subPops[sp].individuals = (self.burstStdev
+            self.subPops[sp].individuals[:] = (self.burstStdev
                 * np.random.randn(self.populationSize,self.subPops[sp].genomeSize)
                 + self.subPopBestIndiv[sp])
     
