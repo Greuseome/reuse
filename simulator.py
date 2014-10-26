@@ -10,7 +10,7 @@ class Simulator(object):
                  game,
                  numInput,
                  skip_num_frames,
-                 max_num_frames
+                 max_num_frames,
                  noreward_stop):
 
         self.game = game

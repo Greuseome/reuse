@@ -49,13 +49,13 @@ def run_game(game,
     shutil.move(tmp, result_file)
 
 if __name__ == '__main__':
-    if len(sys.argv) > 2:
+    if len(sys.argv) > 6:
         game = sys.argv[1]
         net  = sys.argv[2]
         result_file = sys.argv[3]
-        skip_num_frames = sys.argv[4]
-        max_num_frames = sys.argv[5]
-        max_secs_without_reward = sys.argv[6]
+        skip_num_frames = int(sys.argv[4])
+        max_num_frames = int(sys.argv[5])
+        max_secs_without_reward = int(sys.argv[6])
         run_game(game, net, result_file, skip_num_frames, max_num_frames, max_secs_without_reward)
     else:
-        raise Exception("usage: simulator_job.py game /path/to/pickled/net /path/to/result/file")
+        raise Exception("usage: simulator_job.py game /path/to/pickled/net /path/to/result/file skip_num_frames max_num_frames max_secs_without_reward")
