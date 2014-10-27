@@ -116,7 +116,9 @@ def evolve_atari_network(settings_file):
         with open(os.path.join(game_dir,'ne.pkl'),'wb') as world_state:
             cPickle.dump(ne,world_state,2)
 
-        print "+ gen: {}, best: {}".format(generation, curr_best_fitness)
+        print "+ gen: {}, best: {}, Best: {}".format(generation, 
+                                                     curr_best_fitness,
+                                                     best_fitness)
 
         # evolve
         print "evolving..."
