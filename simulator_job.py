@@ -11,7 +11,7 @@ def run_game(game,
              skip_num_frames,
              max_num_frames,
              max_secs_without_reward,
-             drop_rate=0):
+             drop_rate):
 
     currnet = cPickle.load(open(net,'r'))
     currnet.clearCharges()
@@ -30,7 +30,7 @@ def run_game(game,
 
         fitness += sim.reward
 
-        if np.random.random >= drop_rate: # activate if signal not dropped
+        if np.random.random() >= drop_rate: # activate if signal not dropped
             currnet.clearCharges()
             currnet.setInputs(sim.objects)
             currnet.activate()
