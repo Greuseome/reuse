@@ -21,7 +21,8 @@ def run_game(game,
                     max_num_frames,
                     max_secs_without_reward)
     fitness = 0
-
+    i = 0
+    action = 0
     while sim.running():
         success = sim.read()
         if not success:
@@ -48,8 +49,6 @@ def run_game(game,
                     # substract 1 if (not fire) and (dir noop)
                     if output[0] < 0.5: action -= 1
 
-        else: action = 0 #noop if signal dropped
-
         sim.write('{},18\n'.format(action))
         i += 1
 
@@ -61,7 +60,7 @@ def run_game(game,
     shutil.move(tmp, result_file)
 
 if __name__ == '__main__':
-    if len(sys.argv) > 6:
+    if len(sys.argv) > 7:
         game = sys.argv[1]
         net  = sys.argv[2]
         result_file = sys.argv[3]

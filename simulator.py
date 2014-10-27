@@ -92,7 +92,7 @@ class Simulator(object):
             # convert objects to array
             self.objects[:] = [float(x) for x in objects]
             if self.reward <= 0:
-                self.noreward_i += self.skip_num_frames
+                self.noreward_i += self.skip_num_frames + 1
             else:
                 self.noreward_i = 0
 
@@ -130,7 +130,7 @@ class SimulatorJob(object):
         
         job_successful = False
         while not job_successful:
-            self.game_str = './condor_submit_sim.sh {} {} {} {} {} {}' \
+            self.game_str = './condor_submit_sim.sh {} {} {} {} {} {} {}' \
                          .format(game, 
                                  netfile, 
                                  resultfile,
@@ -165,4 +165,3 @@ class SimulatorJob(object):
         f = open(self.resultfile, 'r')
         self.reward = int(f.readline())
         f.close()
-a
