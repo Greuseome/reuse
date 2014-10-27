@@ -24,7 +24,6 @@ def run_game(game,
             break
 
         fitness += sim.reward
-        print fitness
         currnet.clearCharges()
         currnet.setInputs(sim.objects)
         currnet.activate()
