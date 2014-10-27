@@ -7,6 +7,7 @@ RESULT=$3
 SKIPFRAMES=$4
 MAXFRAMES=$5
 MAXNOREW=$6
+DROPRATE=$7
 
 if [[ $# -lt 3 ]]; then
     echo "usage: $(basename $0) <game> <network-file> <results-file>"
@@ -27,7 +28,7 @@ cat > $JOBFILE <<EOL
 
 Universe = vanilla
 Executable = /usr/local/bin/python
-Arguments = $PWD/simulator_job.py $GAME $NETWORK $RESULT $SKIPFRAMES $MAXFRAMES $MAXNOREW
+Arguments = $PWD/simulator_job.py $GAME $NETWORK $RESULT $SKIPFRAMES $MAXFRAMES $MAXNOREW $DROPRATE
 Requirements = InMastodon && Arch == "x86_64"
 
 Error = $RESULT.err

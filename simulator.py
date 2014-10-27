@@ -126,6 +126,7 @@ class SimulatorJob(object):
         skip_num_frames = config.getint('ale','skip_num_frames')
         noreward_stop = config.getint('ale','max_secs_without_reward')
         max_num_frames = config.getint('ale','max_num_frames')
+        drop_rate = config.getfloat('ale','drop_rate')
         
         job_successful = False
         while not job_successful:
@@ -135,7 +136,8 @@ class SimulatorJob(object):
                                  resultfile,
                                  skip_num_frames,
                                  max_num_frames,
-                                 noreward_stop)
+                                 noreward_stop,
+                                 drop_rate)
 
             DEVNULL = open(os.devnull, 'wb')
             self.proc = subprocess.Popen(self.game_str.split(),
@@ -163,4 +165,4 @@ class SimulatorJob(object):
         f = open(self.resultfile, 'r')
         self.reward = int(f.readline())
         f.close()
-
+a
