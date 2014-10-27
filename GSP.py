@@ -23,7 +23,7 @@ class GSP:
         self.burstStdev = self.mutationStdev # keep these equal for now
         self.burstsBeforeRecruit = 1 # keep this constant for now
 
-        numInitialRecruits = config.getint('evolution','num_initial_reuse')
+        numInitialRecruits = config.getint('evolution','num_initial_recruits')
 
         # load reuse topology settings
         self.input2input = config.getboolean('topology','reuse_input_to_input')
