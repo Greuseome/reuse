@@ -13,6 +13,7 @@ def run_game(game,
              max_secs_without_reward):
 
     currnet = cPickle.load(open(net,'r'))
+    currnet.clearCharges()
     sim = Simulator(game,currnet.numInput,skip_num_frames,max_num_frames,max_secs_without_reward)
     fitness = 0
     i = 0
@@ -23,7 +24,8 @@ def run_game(game,
             break
 
         fitness += sim.reward
-
+        print fitness
+        currnet.clearCharges()
         currnet.setInputs(sim.objects)
         currnet.activate()
         output = currnet.readOutputs()
@@ -31,12 +33,12 @@ def run_game(game,
             action = np.argmax(output)
         else:
             # compressed repr: output0 is fire; output1-9 are dirs
-            # relies on output functions with range centered around 0, e.g., [-1,1]
+            # relies on output functions with range centered around 0.5, e.g., [0,1]
             action = np.argmax(output[1:]) + 1
             if action != 1:
-                if output[0] >= 0: action += 8 # add 8 if (fire) and (dir not noop)
+                if output[0] >= 0.5: action += 8 # add 8 if (fire) and (dir not noop)
             else: 
-                if output[0] < 0: action -= 1 # substract 1 if (not fire) and (dir noop)
+                if output[0] < 0.5: action -= 1 # substract 1 if (not fire) and (dir noop)
             
         sim.write('{},18\n'.format(action))
         i += 1

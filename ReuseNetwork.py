@@ -4,7 +4,7 @@ import numpy as np
 import cPickle
 
 def sigmoid(x,b):
-    return np.tanh(2*(x-b))
+    return (np.tanh(2*(x-b))+1)/2
 
 class ReuseNetwork:
 
