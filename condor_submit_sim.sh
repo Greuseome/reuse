@@ -1,6 +1,5 @@
 #!/bin/bash
 
-JOBFILE=$(mktemp)
 GAME=$1
 NETWORK=$2
 RESULT=$3
@@ -8,6 +7,8 @@ SKIPFRAMES=$4
 MAXFRAMES=$5
 MAXNOREW=$6
 DROPRATE=$7
+JOBDIR=$(dirname $RESULT)
+JOBFILE=$(mktemp -p $JOBDIR)
 
 if [[ $# -lt 3 ]]; then
     echo "usage: $(basename $0) <game> <network-file> <results-file>"
@@ -39,3 +40,8 @@ Queue
 EOL
 
 condor_submit $JOBFILE
+
+sleep 5
+
+rm $JOBFILE
+
