@@ -23,6 +23,9 @@ def evolve_atari_network(settings_file):
     input_size = find_num_objects(game)
 
     num_generations = config.getint('evolution','num_generations')
+    if len(config.get('evolution','start_gen')) > 0:
+        start_gen = config.getint('evolution','start_gen')
+    else: start_gen = 0
 
     compressed_output = config.getboolean('topology','compressed_output')
     if compressed_output:
@@ -36,8 +39,13 @@ def evolve_atari_network(settings_file):
         for r in reuseFiles.split(','):
             reusables.append(cPickle.load(open(r,'r')))
 
-    # init evolution
-    ne = NE.GSP(input_size, output_size, reusables, config)
+
+    # init evolution or restart from checkpoint
+    checkpoint = config.get('task','checkpoint')
+    if len(checkpoint) > 0:
+        ne = cPickle.load(open(checkpoint,'r'))
+    else:
+        ne = NE.GSP(input_size, output_size, reusables, config)
 
 
     evolve_id = str(uuid1())
@@ -53,7 +61,7 @@ def evolve_atari_network(settings_file):
 
     best_fitness = -10000000
 
-    for generation in range(num_generations):
+    for generation in range(start_gen,num_generations):
         curr_best_fitness = -10000000
 
         generation_dir = os.path.join(game_dir, 'gen-%04d' % generation)

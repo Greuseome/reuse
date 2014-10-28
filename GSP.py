@@ -18,8 +18,7 @@ class GSP:
         self.populationSize = config.getint('evolution','population_size')
         self.mutationStdev = config.getfloat('evolution','mutation_stdev')
         self.burstStagThreshold = config.getint('evolution','stag_threshold') 
-        self.replacementRate = config.getfloat('evolution','replacement_rate')
-        self.randomReplaceRate = self.replacementRate*0.01 - 0.5
+        self.randomReplaceRate = config.getfloat('evolution','random_replace_rate')
         self.burstStdev = self.mutationStdev # keep these equal for now
         self.burstsBeforeRecruit = 1 # keep this constant for now
 

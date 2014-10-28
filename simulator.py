@@ -145,9 +145,6 @@ class SimulatorJob(object):
                                      stdout= DEVNULL)
 
             self.proc.wait()
-            #job_successful = True
-            #if bool(self.proc.returncode):
-            #    raise Exception('Error submitting job. {}'.format(self.game_str))
                 
             if bool(self.proc.returncode):
                 print 'Error submitting job: retrying...'
