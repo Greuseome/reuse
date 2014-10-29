@@ -21,8 +21,9 @@ def run_game(game,
                     max_num_frames,
                     max_secs_without_reward)
     fitness = 0
-    i = 0
     action = 0
+    curr_skip = 0
+    skipped = 0
     while sim.running():
         success = sim.read()
         if not success:
@@ -30,17 +31,18 @@ def run_game(game,
 
         fitness += sim.reward
 
-        if np.random.random() >= drop_rate: # activate if signal not dropped
+        # activate if no intentional skip and signal not dropped
+        if np.random.random() >= drop_rate and skipped <= curr_skip:
             currnet.clearCharges()
             currnet.setInputs(sim.objects)
             currnet.activate()
             output = currnet.readOutputs()
-            if len(output) == 18:
-                action = np.argmax(output)
+            if len(output) == 18 or len(output) == 19:
+                action = np.argmax(output[:18])
             else:
                 # compressed repr: output0 is fire; output1-9 are dirs
                 # relies on output functions with range centered around 0.5, e.g., [0,1]
-                action = np.argmax(output[1:]) + 1
+                action = np.argmax(output[1:10]) + 1
                 if action != 1:
                     # add 8 if (fire) and (dir not noop)
                     if output[0] >= 0.5: 
@@ -48,9 +50,19 @@ def run_game(game,
                 else: 
                     # substract 1 if (not fire) and (dir noop)
                     if output[0] < 0.5: action -= 1
+            
+            # get the num repeats for the current action
+            if len(output) % 2 == 1:
+                skip_sum = np.arctanh(output[-1]*2+1)
+                if skip_sum < 0: curr_skip = 0
+                elif skip_sum > 3: curr_skip = 300
+                else: curr_skip = np.floor(skip_sum*100)
+        
+        else: skipped += 1
 
         sim.write('{},18\n'.format(action))
-        i += 1
+
+
 
     tmp = tempfile.mktemp()
     f = open(tmp, 'w')

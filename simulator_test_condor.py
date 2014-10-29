@@ -31,6 +31,9 @@ def evolve_atari_network(settings_file):
     if compressed_output:
         output_size = 10
     else: output_size = 18
+    
+    if config.getboolean('topology','skip_select'):
+        output_size += 1
 
     # load reuse nets
     reusables = []
