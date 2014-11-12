@@ -11,7 +11,8 @@ class Simulator(object):
                  numInput,
                  skip_num_frames,
                  max_num_frames,
-                 noreward_stop):
+                 noreward_stop,
+                 display):
 
         self.game = game
         self.objects = np.empty(numInput,dtype=float)
@@ -22,12 +23,14 @@ class Simulator(object):
         self.terminated = False
         self.reward = 0
         self.noreward_i = 0
-
+        if display: display_str = 'true'
+        else: display_str = 'false'
         game_str = './run_ale.sh \
                     -game_controller fifo \
                     -max_num_frames {} \
+                    -display_screen {} \
                     /u/mhollen/sift/ale/roms/{}.bin' \
-                    .format(self.max_num_frames, self.game)
+                    .format(self.max_num_frames,display_str,self.game)
 
         self.proc = subprocess.Popen(game_str.split(),
                                 stdout = subprocess.PIPE,
@@ -59,7 +62,10 @@ class Simulator(object):
     def read(self):
         """ read from ALE fifo (stdout) and update values
         """
-
+        
+        if self.terminated:
+            return False
+        
         if self.proc.returncode is not None:
             self.end()
             return False
@@ -95,10 +101,9 @@ class Simulator(object):
                 self.noreward_i += self.skip_num_frames + 1
             else:
                 self.noreward_i = 0
-
+        
         if self.terminated:
             self.proc.kill()
-            return False
 
         return True
 
@@ -127,17 +132,20 @@ class SimulatorJob(object):
         noreward_stop = config.getint('ale','max_secs_without_reward')
         max_num_frames = config.getint('ale','max_num_frames')
         drop_rate = config.getfloat('ale','drop_rate')
-        
+        num_evals = config.getint('evolution','num_evals_per_net')
+        display = config.getboolean('ale','display_screen')       
         job_successful = False
         while not job_successful:
-            self.game_str = './condor_submit_sim.sh {} {} {} {} {} {} {}' \
+            self.game_str = './condor_submit_sim.sh {} {} {} {} {} {} {} {}' \
                          .format(game, 
                                  netfile, 
                                  resultfile,
                                  skip_num_frames,
                                  max_num_frames,
                                  noreward_stop,
-                                 drop_rate)
+                                 drop_rate,
+                                 num_evals,
+                                 display)
 
             DEVNULL = open(os.devnull, 'wb')
             self.proc = subprocess.Popen(self.game_str.split(),

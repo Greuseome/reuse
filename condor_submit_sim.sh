@@ -29,7 +29,7 @@ cat > $JOBFILE <<EOL
 
 Universe = vanilla
 Executable = /usr/local/bin/python
-Arguments = $PWD/simulator_job.py $GAME $NETWORK $RESULT $SKIPFRAMES $MAXFRAMES $MAXNOREW $DROPRATE
+Arguments = $PWD/simulator_job.py $GAME $NETWORK $RESULT $SKIPFRAMES $MAXFRAMES $MAXNOREW $DROPRATE $NUM_EVALS $DISPLAY_SCREEN
 Requirements = InMastodon && Arch == "x86_64"
 
 Error = $RESULT.err
