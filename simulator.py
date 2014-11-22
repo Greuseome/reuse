@@ -168,5 +168,5 @@ class SimulatorJob(object):
 
     def update_reward(self):
         f = open(self.resultfile, 'r')
-        self.reward = int(f.readline())
+        self.reward = float(f.readline())
         f.close()
