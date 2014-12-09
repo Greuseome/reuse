@@ -52,7 +52,7 @@ def evolve_atari_network(settings_file):
     game_dir = os.path.join(os.getcwdu(), 'results', game, evolve_id)
     if not os.path.exists(game_dir):
         os.makedirs(game_dir)
-    shutil.copy(settings_file,os.path.join(game_dir,settings_file))
+    shutil.copy(settings_file, os.path.join(game_dir,'settings.ini'))
 
     print '*'*40
     print "All files will be saved to:"
