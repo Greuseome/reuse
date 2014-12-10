@@ -7,6 +7,7 @@ if [[ ! -d ./pyenv ]]; then
     fi
     virtualenv pyenv
     source ./pyenv/bin/activate
+    easy_install -U distribute
     pip install -r requirements.txt
 fi
 
