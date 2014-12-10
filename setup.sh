@@ -2,7 +2,8 @@
 
 if [[ ! -d ./pyenv ]]; then
     if [[ "$(which virtualenv)" == "" ]]; then
-        easy_install virtual_env
+        echo "Cannot find virtualenv. Run setup script using machine that has virtualenv (e.g. turtles)."
+        exit
     fi
     virtualenv pyenv
     source ./pyenv/bin/activate
