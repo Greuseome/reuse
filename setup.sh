@@ -9,7 +9,11 @@ if [[ ! -d ./pyenv ]]; then
     source ./pyenv/bin/activate
     easy_install -U distribute
     pip install -r requirements.txt
+else
+    source ./pyenv/bin/activate
 fi
+
+#/bin/bash -c ". ./pyenv/bin/activate; exec /bin/bash -i"
 
 # ATARI images and roms
 [[ ! -d ./images ]] && ln -s /u/mhollen/sift/ale-assets/images images
