@@ -38,6 +38,8 @@ def makedirs(d, m):
 
 
 def evolve_atari_network(settings, label=None, outdir=None):
+    global generation_dir
+
     # read settings file
     config = ConfigParser.ConfigParser()
     config.read(settings)
