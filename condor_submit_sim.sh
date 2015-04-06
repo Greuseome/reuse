@@ -7,6 +7,8 @@ SKIPFRAMES=$4
 MAXFRAMES=$5
 MAXNOREW=$6
 DROPRATE=$7
+NUM_EVALS=$8
+DISPLAY_SCREEN=$9
 JOBDIR=$(dirname $RESULT)
 JOBFILE=$(mktemp -p $JOBDIR)
 
@@ -40,8 +42,6 @@ Queue
 EOL
 
 condor_submit $JOBFILE
-
-sleep 5
 
 rm $JOBFILE
 

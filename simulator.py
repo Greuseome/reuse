@@ -136,7 +136,7 @@ class SimulatorJob(object):
         display = config.getboolean('ale','display_screen')       
         job_successful = False
         while not job_successful:
-            self.game_str = './condor_submit_sim.sh {} {} {} {} {} {} {} {}' \
+            self.game_str = './condor_submit_sim.sh {} {} {} {} {} {} {} {} {}' \
                          .format(game, 
                                  netfile, 
                                  resultfile,

@@ -81,9 +81,9 @@ if __name__ == '__main__':
     if l > 6: max_secs_without_reward = int(sys.argv[6])
     else: max_secs_without_reward = max_num_frames
     if l > 7: drop_rate = float(sys.argv[7])
-    else: drop_rate = 0.005
+    else: drop_rate = 0.25
     if l > 8: num_evals = int(sys.argv[8])
-    else: num_evals = 5
+    else: num_evals = 1
     if l > 9: display = bool(sys.argv[9])
     else: display = False
     if l > 3:
