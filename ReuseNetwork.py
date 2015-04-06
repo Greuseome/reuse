@@ -28,8 +28,9 @@ class ReuseNetwork:
         self.outputStart = self.numInput
         
         # types of transfer connections
-        self.input2input = config.getboolean('topology','reuse_input_to_input')
-        self.input2hidden = config.getboolean('topology','reuse_input_to_hidden')
+        self.input2input = config.getboolean('topology','reuse_input_to_input') if config is not None else False
+        self.input2hidden = config.getboolean('topology','reuse_input_to_hidden') if config is not None else False
+
        
 
     def addHidden(self, bias=0.5):

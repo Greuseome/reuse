@@ -23,7 +23,7 @@ print "avg hidden nodes: " + str(avg_hidden)
 # construct random net
 random_hidden = int(round(avg_hidden))
 print "random hidden: " + str(random_hidden)
-random_net = NN.ReuseNetwork(NUM_INPUT,NUM_OUTPUT)
+random_net = NN.ReuseNetwork(NUM_INPUT,NUM_OUTPUT, None)
 for h in range(random_hidden): random_net.addHidden()
 num_nodes = random_net.numNodes
 random_net.edgeWeights = np.random.randn(num_nodes,num_nodes)

@@ -37,7 +37,7 @@ def makedirs(d, m):
             os.umask(orig_umask)
 
 
-def evolve_atari_network(settings, label=None, outdir=None):
+def evolve_atari_network(settings, label=None, outdir=None, count=None):
     global generation_dir
 
     # read settings file
@@ -75,11 +75,15 @@ def evolve_atari_network(settings, label=None, outdir=None):
     if outdir is None: outdir = os.getcwdu()
 
     # define experiment folder
-    evolve_id = datetime.datetime.now().strftime('%Y%M%d-%H%M-%f')
+    if count is None:
+        evolve_id = datetime.datetime.now().strftime('%Y%M%d-%H%M-%f')
+    else:
+        evolve_id = "run-{}".format(count)
+
     if not label:
         game_dir = os.path.join(outdir, game, evolve_id)
     else:
-        game_dir = os.path.join(outdir, game, label, evolve_id)
+        game_dir = os.path.join(outdir, label, evolve_id)
 
     fitness_file = os.path.join(game_dir,  'fitness.history')
     settings_file = os.path.join(game_dir, 'settings.ini')
@@ -196,9 +200,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-l', '--label', help="label for experiment")
     parser.add_argument('-o', '--outdir', help="root output results directory")
+    parser.add_argument('-c', '--count', help="use count (rather than random unique ID)")
     parser.add_argument("settings_file", help="settings file for experiment")
     args = parser.parse_args()
 
-    evolve_atari_network(args.settings_file, label=args.label, outdir=args.outdir)
+    evolve_atari_network(args.settings_file, label=args.label, outdir=args.outdir, count=args.count)
 
 
